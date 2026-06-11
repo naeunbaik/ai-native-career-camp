@@ -4511,55 +4511,49 @@
         keycapMaterial = m;   // scroll handler에서 참조
 
         // ── Dispersion 증폭 + Heatmap(써모그래픽) 리매핑 ──────────────
-        // 1) dispersion halfSpread 10배 증폭 → 굴절 가장자리 색분리 강화
-        // 2) transmitted 색의 휘도(luminance)를 5-stop heatmap 팔레트로 리매핑
-        //    → 키캡 너머 'AI NATIVE' 영역이 thermal 스캔처럼 보이도록
-        //    딥 블루(차가움) → 퍼플 → 마젠타 → 오렌지 → 화이트옐로우(뜨거움)
+        // Three.js r166: onBeforeCompile은 chunk include가 펼쳐지기 전에 호출됨.
+        // 따라서 chunk 내부 텍스트는 fragmentShader에 없음 → #include 자체를
+        // 수정된 chunk 문자열로 치환해야 함.
         m.onBeforeCompile = (shader) => {
-          shader.fragmentShader = shader.fragmentShader.replace(
+          /* 1) Dispersion 증폭: transmission_pars_fragment chunk의 halfSpread 10x */
+          const patchedPars = THREE.ShaderChunk.transmission_pars_fragment.replace(
             /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
             'float halfSpread = ( ior - 1.0 ) * 0.25 * dispersion;'
           );
-
-          // heatmap 컬러맵 함수 주입 (main() 직전)
-          // Inferno 팔레트 기반 — black → deep purple → magenta → red-orange → gold → white
           shader.fragmentShader = shader.fragmentShader.replace(
-            'void main() {',
-            `
-            /* 6-stop Inferno-style heatmap — 강한 contrast 의 thermal 룩 */
-            vec3 heatmapColormap(float t) {
-              t = clamp(t, 0.0, 1.0);
-              const vec3 c0 = vec3(0.00, 0.00, 0.05);   /* near-black */
-              const vec3 c1 = vec3(0.10, 0.02, 0.40);   /* deep purple */
-              const vec3 c2 = vec3(0.55, 0.05, 0.55);   /* magenta */
-              const vec3 c3 = vec3(0.95, 0.20, 0.20);   /* red-orange */
-              const vec3 c4 = vec3(1.00, 0.55, 0.05);   /* burning orange */
-              const vec3 c5 = vec3(1.00, 0.95, 0.60);   /* hot gold-white */
-              if (t < 0.20)      return mix(c0, c1, t / 0.20);
-              else if (t < 0.40) return mix(c1, c2, (t - 0.20) / 0.20);
-              else if (t < 0.60) return mix(c2, c3, (t - 0.40) / 0.20);
-              else if (t < 0.80) return mix(c3, c4, (t - 0.60) / 0.20);
-              else               return mix(c4, c5, (t - 0.80) / 0.20);
-            }
-            void main() {
-            `
+            '#include <transmission_pars_fragment>',
+            patchedPars
           );
 
-          // transmitted.rgb 를 heatmap 팔레트로 완전 리매핑 (100%)
-          // → 키캡 너머 영역이 명확히 thermal scan 처럼 보임
-          shader.fragmentShader = shader.fragmentShader.replace(
+          /* 2) Heatmap 리매핑: transmission_fragment chunk의 마지막 mix 라인 교체 */
+          const patchedFrag = THREE.ShaderChunk.transmission_fragment.replace(
             /totalDiffuse\s*=\s*mix\(\s*totalDiffuse\s*,\s*transmitted\.rgb\s*,\s*material\.transmission\s*\)\s*;/,
             `
-            /* heat 강도 = transmitted 휘도. sqrt 곡선으로 어두운 영역도 보라색 영역까지 끌어올림 */
+            /* heat 강도 = transmitted 휘도 (Rec.709). sqrt 곡선으로 어두운 영역 부스트 */
             float __heat = dot(transmitted.rgb, vec3(0.2126, 0.7152, 0.0722));
             __heat = clamp(sqrt(__heat) * 1.15, 0.0, 1.0);
-            /* dispersion 의 RGB 분리 정도를 추가 입력으로 사용해 가장자리에 색 변화 더 강조 */
+            /* dispersion chroma → heat 추가 입력 (가장자리 색분리도 hot 톤으로) */
             float __chroma = length(transmitted.rgb - vec3(__heat));
             __heat = clamp(__heat + __chroma * 0.5, 0.0, 1.0);
-            vec3 __heatCol = heatmapColormap(__heat);
-            /* heatmap 100% 적용 — 원본 dispersion 컬러 대신 thermal 팔레트로 교체 */
+            /* 6-stop Inferno-style heatmap colormap */
+            vec3 __c0 = vec3(0.00, 0.00, 0.05);
+            vec3 __c1 = vec3(0.10, 0.02, 0.40);
+            vec3 __c2 = vec3(0.55, 0.05, 0.55);
+            vec3 __c3 = vec3(0.95, 0.20, 0.20);
+            vec3 __c4 = vec3(1.00, 0.55, 0.05);
+            vec3 __c5 = vec3(1.00, 0.95, 0.60);
+            vec3 __heatCol;
+            if (__heat < 0.20)      __heatCol = mix(__c0, __c1, __heat / 0.20);
+            else if (__heat < 0.40) __heatCol = mix(__c1, __c2, (__heat - 0.20) / 0.20);
+            else if (__heat < 0.60) __heatCol = mix(__c2, __c3, (__heat - 0.40) / 0.20);
+            else if (__heat < 0.80) __heatCol = mix(__c3, __c4, (__heat - 0.60) / 0.20);
+            else                    __heatCol = mix(__c4, __c5, (__heat - 0.80) / 0.20);
             totalDiffuse = mix(totalDiffuse, __heatCol, material.transmission);
             `
+          );
+          shader.fragmentShader = shader.fragmentShader.replace(
+            '#include <transmission_fragment>',
+            patchedFrag
           );
         };
         m.needsUpdate = true;
