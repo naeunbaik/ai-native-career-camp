@@ -102,6 +102,15 @@
     }
     html.is-embedded .ax-header { top: 60px; }
     html.is-embedded .ax-footer { bottom: 60px; }
+    /* 임베드 시 body 기본 흰색 bg가 problem 섹션의 그라데이션 투명 구간을
+       통해 보여 인트로 하단에 흰 띠가 생기는 문제 차단.
+       canvas/intro가 dark이므로 body도 dark로 두면 자연스럽게 이어짐. */
+    html.is-embedded body { background: #14191e; }
+    /* problem 섹션의 그라데이션도 솔리드 다크로 교체 → 인트로 끝나는 지점에서
+       바로 다크가 이어지도록 */
+    html.is-embedded .ax-section.problem {
+      background: #14191e;
+    }
 
 
     /* ── 상단 헤드라인 ─────────────────────────────────────────── */
