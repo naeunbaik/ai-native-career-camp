@@ -4090,66 +4090,6 @@
     import { GLTFLoader } from 'https://esm.sh/three@0.166.0/examples/jsm/loaders/GLTFLoader';
     import { RGBELoader } from 'https://esm.sh/three@0.166.0/examples/jsm/loaders/RGBELoader';
 
-    /* ── Three.js ShaderChunk 글로벌 패치 ─────────────────────────────
-       MeshPhysicalMaterial transmission shader chunk 수정.
-       GLSL ES 3.0 호환을 위해 식별자에 double-underscore 사용 금지 (예약됨). */
-    try {
-      const _hadPars = !!(THREE.ShaderChunk && THREE.ShaderChunk.transmission_pars_fragment);
-      const _hadFrag = !!(THREE.ShaderChunk && THREE.ShaderChunk.transmission_fragment);
-      let _parsPatched = false;
-      let _fragPatched = false;
-
-      if (_hadPars) {
-        const before = THREE.ShaderChunk.transmission_pars_fragment;
-        /* dispersion halfSpread 0.025 → 0.5 (20x 부스트, 더 강한 색분리) */
-        const after = before.replace(
-          /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
-          'float halfSpread = ( ior - 1.0 ) * 0.5 * dispersion;'
-        );
-        _parsPatched = (after !== before);
-        THREE.ShaderChunk.transmission_pars_fragment = after;
-      }
-
-      if (_hadFrag) {
-        const before = THREE.ShaderChunk.transmission_fragment;
-        /* Pink-Jet 하이브리드 팔레트:
-           plum → hot pink(키캡 셸이 분홍빛) → jet blue → cyan → yellow → red
-           - hmC1 R값을 0.10 → 0.95로 부스트해서 마젠타-핑크 톤 강화
-           - heat 강도 sqrt 곱 1.15 → 1.5 (더 hot한 영역 확장) */
-        const after = before.replace(
-          /totalDiffuse\s*=\s*mix\(\s*totalDiffuse\s*,\s*transmitted\.rgb\s*,\s*material\.transmission\s*\)\s*;/,
-          `
-          float hmHeat = dot( transmitted.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
-          hmHeat = clamp( sqrt( hmHeat ) * 1.5, 0.0, 1.0 );
-          float hmChroma = length( transmitted.rgb - vec3( hmHeat ) );
-          hmHeat = clamp( hmHeat + hmChroma * 0.6, 0.0, 1.0 );
-          vec3 hmC0 = vec3( 0.20, 0.05, 0.30 );
-          vec3 hmC1 = vec3( 0.95, 0.35, 0.65 );
-          vec3 hmC2 = vec3( 0.10, 0.55, 1.00 );
-          vec3 hmC3 = vec3( 0.00, 0.92, 1.00 );
-          vec3 hmC4 = vec3( 1.00, 0.88, 0.10 );
-          vec3 hmC5 = vec3( 1.00, 0.18, 0.00 );
-          vec3 hmCol;
-          if ( hmHeat < 0.20 )      hmCol = mix( hmC0, hmC1, hmHeat / 0.20 );
-          else if ( hmHeat < 0.40 ) hmCol = mix( hmC1, hmC2, ( hmHeat - 0.20 ) / 0.20 );
-          else if ( hmHeat < 0.60 ) hmCol = mix( hmC2, hmC3, ( hmHeat - 0.40 ) / 0.20 );
-          else if ( hmHeat < 0.80 ) hmCol = mix( hmC3, hmC4, ( hmHeat - 0.60 ) / 0.20 );
-          else                      hmCol = mix( hmC4, hmC5, ( hmHeat - 0.80 ) / 0.20 );
-          totalDiffuse = mix( totalDiffuse, hmCol, material.transmission );
-          `
-        );
-        _fragPatched = (after !== before);
-        THREE.ShaderChunk.transmission_fragment = after;
-      }
-
-      console.log('[keycap] ShaderChunk patch:', {
-        hadPars: _hadPars, parsPatched: _parsPatched,
-        hadFrag: _hadFrag, fragPatched: _fragPatched
-      });
-    } catch (e) {
-      console.warn('[keycap] Heatmap shader patch error:', e);
-    }
-
     /* ── iframe 임베드 보정 ─────────────────────────────────────────
        Wanted 등 부모 페이지에서 iframe 높이를 9600px 처럼 길게 잡으면
        iframe 내부의 window.innerHeight 가 9600 으로 잡혀 캔버스 aspect 가
@@ -4293,41 +4233,6 @@
     scene.add(introBackdrop);
     const BACKDROP_DARK = new THREE.Color(0x14191e);
     const BACKDROP_LIGHT = new THREE.Color(0xffffff);
-
-    /* ── Hot Glow 플레인 — 키캡 주변 thermal 광량 효과 ───────────────
-       Canvas radial-gradient 텍스처로 핫 오렌지/레드 후광을 만들고
-       additive blending 으로 누적 → 키캡 가장자리에서 빛이 새어나오는 룩.
-       z=-20: text plane(-25) 보다 앞 / 키캡(0)보다 뒤 → 키캡 주위로 halo */
-    (function addHotGlow() {
-      const g = document.createElement('canvas');
-      g.width = 512; g.height = 512;
-      const ctx = g.getContext('2d');
-      const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
-      grad.addColorStop(0.00, 'rgba(255, 120, 30, 0.90)');
-      grad.addColorStop(0.18, 'rgba(255,  80, 20, 0.65)');
-      grad.addColorStop(0.40, 'rgba(220,  40, 10, 0.30)');
-      grad.addColorStop(0.70, 'rgba(120,  20,  5, 0.08)');
-      grad.addColorStop(1.00, 'rgba(  0,   0,  0, 0.00)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 512, 512);
-
-      const tex = new THREE.CanvasTexture(g);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.minFilter = THREE.LinearFilter;
-      tex.magFilter = THREE.LinearFilter;
-
-      const glowMat = new THREE.MeshBasicMaterial({
-        map: tex,
-        transparent: true,
-        depthWrite: false,
-        toneMapped: false,
-        blending: THREE.AdditiveBlending,
-      });
-      const glowMesh = new THREE.Mesh(new THREE.PlaneGeometry(140, 140), glowMat);
-      glowMesh.position.z = -20;
-      glowMesh.renderOrder = -2;     /* backdrop(-3) 뒤, text(-1) 앞 */
-      scene.add(glowMesh);
-    })();
 
     // ── 다방향 보조 라이트 — 키캡 곡면에 여러 highlight 생성 ─────────
     // 인트로와 동일한 흰색 라이트 (dispersion이 자연 분리해서 무지개 만듦)
@@ -4605,8 +4510,14 @@
 
         keycapMaterial = m;   // scroll handler에서 참조
 
-        /* dispersion + heatmap은 위에서 THREE.ShaderChunk를 글로벌 수정해
-           처리하므로 onBeforeCompile은 더 이상 필요 없음. */
+        // ── Dispersion 강제 증폭만 유지 (자연스러운 글래스 굴절 색분리) ──
+        m.onBeforeCompile = (shader) => {
+          shader.fragmentShader = shader.fragmentShader.replace(
+            /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
+            'float halfSpread = ( ior - 1.0 ) * 0.25 * dispersion;'
+          );
+        };
+        m.needsUpdate = true;
       }
 
       // 키캡 메시 bbox + 사이즈 산정
