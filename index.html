@@ -4497,16 +4497,16 @@
       if (keycapMesh) {
         const m = keycapMesh.material;
         m.transmission = 1.0;
-        /* roughness 0.03 → 0.18: transmission mipmap 샘플링이 자연 블러되어
-           dispersion 색분리 가장자리가 sharp한 라인이 아닌 부드러운 무지개
-           후광(soft chromatic glow)처럼 번짐. clearcoatRoughness는 0 유지
-           → 키캡 표면 자체는 여전히 거울처럼 선명한 반사. */
-        m.roughness = 0.18;
+        /* roughness 0.10: transmission mipmap 샘플링이 살짝 블러되어
+           dispersion 색분리 가장자리가 부드러운 무지개 후광처럼 번짐.
+           clearcoatRoughness는 0 유지 → 셸 표면 반사는 sharp. */
+        m.roughness = 0.10;
         m.ior = 1.55;
         m.thickness = 6.0;
         m.attenuationColor = new THREE.Color(1.0, 0.95, 0.92);
         m.attenuationDistance = 15;
-        m.dispersion = 5.0;
+        /* dispersion 8.0 — 색분리 강도 부스트 */
+        m.dispersion = 8.0;
         m.clearcoat = 1.0;
         m.clearcoatRoughness = 0.0;
         m.transparent = true;
