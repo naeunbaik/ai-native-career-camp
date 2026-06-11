@@ -4091,48 +4091,58 @@
     import { RGBELoader } from 'https://esm.sh/three@0.166.0/examples/jsm/loaders/RGBELoader';
 
     /* ── Three.js ShaderChunk 글로벌 패치 ─────────────────────────────
-       MeshPhysicalMaterial transmission 의 shader chunk를 컴파일 전에 수정.
-       이 페이지에서 transmission을 쓰는 머티리얼은 키캡 셸 하나뿐이므로
-       글로벌 수정해도 사이드이펙트 없음. */
+       MeshPhysicalMaterial transmission shader chunk 수정.
+       GLSL ES 3.0 호환을 위해 식별자에 double-underscore 사용 금지 (예약됨). */
     try {
-      if (THREE.ShaderChunk && THREE.ShaderChunk.transmission_pars_fragment) {
-        /* 1) dispersion halfSpread 10x 부스트 (가장자리 색분리 강화) */
-        THREE.ShaderChunk.transmission_pars_fragment =
-          THREE.ShaderChunk.transmission_pars_fragment.replace(
-            /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
-            'float halfSpread = ( ior - 1.0 ) * 0.25 * dispersion;'
-          );
+      const _hadPars = !!(THREE.ShaderChunk && THREE.ShaderChunk.transmission_pars_fragment);
+      const _hadFrag = !!(THREE.ShaderChunk && THREE.ShaderChunk.transmission_fragment);
+      let _parsPatched = false;
+      let _fragPatched = false;
+
+      if (_hadPars) {
+        const before = THREE.ShaderChunk.transmission_pars_fragment;
+        const after = before.replace(
+          /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
+          'float halfSpread = ( ior - 1.0 ) * 0.25 * dispersion;'
+        );
+        _parsPatched = (after !== before);
+        THREE.ShaderChunk.transmission_pars_fragment = after;
       }
-      if (THREE.ShaderChunk && THREE.ShaderChunk.transmission_fragment) {
-        /* 2) transmitted 컬러를 Inferno-style heatmap 팔레트로 리매핑
-           (totalDiffuse mix 라인 직전에 heat 계산 + 컬러맵 lookup) */
-        THREE.ShaderChunk.transmission_fragment =
-          THREE.ShaderChunk.transmission_fragment.replace(
-            /totalDiffuse\s*=\s*mix\(\s*totalDiffuse\s*,\s*transmitted\.rgb\s*,\s*material\.transmission\s*\)\s*;/,
-            `
-            float __heat = dot(transmitted.rgb, vec3(0.2126, 0.7152, 0.0722));
-            __heat = clamp(sqrt(__heat) * 1.15, 0.0, 1.0);
-            float __chroma = length(transmitted.rgb - vec3(__heat));
-            __heat = clamp(__heat + __chroma * 0.5, 0.0, 1.0);
-            vec3 __c0 = vec3(0.00, 0.00, 0.05);
-            vec3 __c1 = vec3(0.10, 0.02, 0.40);
-            vec3 __c2 = vec3(0.55, 0.05, 0.55);
-            vec3 __c3 = vec3(0.95, 0.20, 0.20);
-            vec3 __c4 = vec3(1.00, 0.55, 0.05);
-            vec3 __c5 = vec3(1.00, 0.95, 0.60);
-            vec3 __heatCol;
-            if (__heat < 0.20)      __heatCol = mix(__c0, __c1, __heat / 0.20);
-            else if (__heat < 0.40) __heatCol = mix(__c1, __c2, (__heat - 0.20) / 0.20);
-            else if (__heat < 0.60) __heatCol = mix(__c2, __c3, (__heat - 0.40) / 0.20);
-            else if (__heat < 0.80) __heatCol = mix(__c3, __c4, (__heat - 0.60) / 0.20);
-            else                    __heatCol = mix(__c4, __c5, (__heat - 0.80) / 0.20);
-            totalDiffuse = mix( totalDiffuse, __heatCol, material.transmission );
-            `
-          );
+
+      if (_hadFrag) {
+        const before = THREE.ShaderChunk.transmission_fragment;
+        const after = before.replace(
+          /totalDiffuse\s*=\s*mix\(\s*totalDiffuse\s*,\s*transmitted\.rgb\s*,\s*material\.transmission\s*\)\s*;/,
+          `
+          float hmHeat = dot( transmitted.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+          hmHeat = clamp( sqrt( hmHeat ) * 1.15, 0.0, 1.0 );
+          float hmChroma = length( transmitted.rgb - vec3( hmHeat ) );
+          hmHeat = clamp( hmHeat + hmChroma * 0.5, 0.0, 1.0 );
+          vec3 hmC0 = vec3( 0.00, 0.00, 0.05 );
+          vec3 hmC1 = vec3( 0.10, 0.02, 0.40 );
+          vec3 hmC2 = vec3( 0.55, 0.05, 0.55 );
+          vec3 hmC3 = vec3( 0.95, 0.20, 0.20 );
+          vec3 hmC4 = vec3( 1.00, 0.55, 0.05 );
+          vec3 hmC5 = vec3( 1.00, 0.95, 0.60 );
+          vec3 hmCol;
+          if ( hmHeat < 0.20 )      hmCol = mix( hmC0, hmC1, hmHeat / 0.20 );
+          else if ( hmHeat < 0.40 ) hmCol = mix( hmC1, hmC2, ( hmHeat - 0.20 ) / 0.20 );
+          else if ( hmHeat < 0.60 ) hmCol = mix( hmC2, hmC3, ( hmHeat - 0.40 ) / 0.20 );
+          else if ( hmHeat < 0.80 ) hmCol = mix( hmC3, hmC4, ( hmHeat - 0.60 ) / 0.20 );
+          else                      hmCol = mix( hmC4, hmC5, ( hmHeat - 0.80 ) / 0.20 );
+          totalDiffuse = mix( totalDiffuse, hmCol, material.transmission );
+          `
+        );
+        _fragPatched = (after !== before);
+        THREE.ShaderChunk.transmission_fragment = after;
       }
-      console.log('[keycap] Heatmap shader chunks patched OK');
+
+      console.log('[keycap] ShaderChunk patch:', {
+        hadPars: _hadPars, parsPatched: _parsPatched,
+        hadFrag: _hadFrag, fragPatched: _fragPatched
+      });
     } catch (e) {
-      console.warn('[keycap] Heatmap shader patch skipped:', e);
+      console.warn('[keycap] Heatmap shader patch error:', e);
     }
 
     /* ── iframe 임베드 보정 ─────────────────────────────────────────
