@@ -1,0 +1,11 @@
+Model Information:
+* title:	Key Cap_ Template
+* source:	https://sketchfab.com/3d-models/key-cap--template-deac52aa677147d881a27ca6f1b8afc4
+* author:	Luking (https://sketchfab.com/Luking)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Key Cap_ Template" (https://sketchfab.com/3d-models/key-cap--template-deac52aa677147d881a27ca6f1b8afc4) by Luking (https://sketchfab.com/Luking) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -1,0 +1,4675 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AX · 00 Intro</title>
+
+  <!-- 외부 호스트 preconnect — TLS handshake 단축 (HDRI는 비중요로 변경, JS·폰트만 우선) -->
+  <link rel="preconnect" href="https://esm.sh" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
+  <!-- 핵심 자산: 인트로 렌더에 필수 -->
+  <link rel="preload" as="fetch" href="keycap_ax.glb" crossorigin="anonymous" fetchpriority="high">
+  <link rel="preload" as="image" href="text_ai_native.svg" fetchpriority="high">
+  <!-- HDRI는 키캡 반사용. 인트로 첫 페인트 후 로드되도록 preload 제거 (시각적 영향 최소) -->
+
+  <!-- Three.js 모듈 병렬 다운로드 (HTML 파싱 단계에서 fetch 시작) -->
+  <link rel="modulepreload" href="https://esm.sh/three@0.166.0">
+  <link rel="modulepreload" href="https://esm.sh/three@0.166.0/examples/jsm/loaders/GLTFLoader">
+  <link rel="modulepreload" href="https://esm.sh/three@0.166.0/examples/jsm/loaders/RGBELoader">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.4/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.min.css" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.4/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.min.css"></noscript>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      background: #fff;
+      overflow-x: hidden;
+      font-family: 'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      color: #000;
+      font-feature-settings: 'ss10' 1;
+      word-break: keep-all;       /* 한국어 어절 단위 줄바꿈 */
+      overflow-wrap: break-word;  /* 너무 긴 단어는 강제 줄바꿈 */
+    }
+
+    /* Figma: MARKETING 배경 텍스트 (1060 x 285.509, 화면 정중앙) */
+    .marketing-wrap {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .marketing-wrap img {
+      display: block;
+      width: calc(100% - 100px);   /* 양쪽 50px 패딩 */
+      height: auto;                /* 가로세로 비율 유지 (1060:285.509) */
+    }
+
+    /* Three.js 캔버스 (배경 투명, 키캡만) */
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 1;
+      transition: filter 0.1s linear;   /* blur 부드럽게 */
+      will-change: filter;
+    }
+
+    /* ── 섹션 공통 ─────────────────────────────────────────────── */
+    /* 데스크톱 섹션 사이드 패딩: 뷰포트에 따라 32px(좁음) → 190px(넓음) 선형 보간
+       769px 뷰포트 → 32px / 1440px 뷰포트 → 190px / 1440px↑ → 190px 고정 */
+    :root {
+      --section-px: clamp(32px, calc(23.55vw - 149px), 190px);
+    }
+    /* 캔버스(z-1) 위로 카드만 띄우고, 텍스트는 캔버스 뒤로 → 키캡이 텍스트 위로 떠보임 */
+    .ax-section {
+      position: relative;
+      width: 100%;
+    }
+    /* 인트로 헤더/풋터는 캔버스 위에 */
+    .ax-header, .ax-footer {
+      z-index: 2;
+    }
+    /* 다크 섹션의 카드 + 헤드라인 텍스트 모두 캔버스 위에 */
+    .problem-card,
+    .signal-card,
+    .solution-card,
+    .outcome-card,
+    .problem-headline,
+    .signal-intro,
+    .solution-intro,
+    .outcome-headline {
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── 00 Intro ──────────────────────────────────────────────── */
+    .ax-section.intro {
+      height: 100vh;
+      background: #14191e;     /* WebGL 로드 전 fallback (실제 다크 bg는 3D backdrop이 제공) */
+      position: relative;
+      /* z-index 미지정 → 스태킹 컨텍스트 생성 안 함 → 자식 텍스트(z:2)가 캔버스(z:1) 위로 올라옴 */
+    }
+
+    /* iframe 임베드 시(wanted 등) — 부모 chrome 고려해 인트로 높이 고정 */
+    html.is-embedded .ax-section.intro {
+      height: 850px;
+      min-height: 700px;
+    }
+    html.is-embedded .ax-header { top: 60px; }
+    html.is-embedded .ax-footer { bottom: 60px; }
+
+
+    /* ── 상단 헤드라인 ─────────────────────────────────────────── */
+    .ax-header {
+      position: absolute;
+      top: 65px;                   /* Figma top-[65px] */
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - (var(--section-px) * 2));   /* 좌우 section-px 패딩 (반응형) */
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                   /* Figma gap-[16px] (eyebrow ↔ title) */
+      pointer-events: none;
+    }
+    .ax-eyebrow {
+      font-size: 24px;             /* Figma P_Headline2/SB */
+      font-weight: 600;            /* SemiBold */
+      line-height: 1.5;
+      letter-spacing: -0.01em;     /* -0.24/24 */
+      color: #89c8ea;              /* Figma blue accent */
+      margin: 0;
+    }
+    .ax-title {
+      font-size: 72px;             /* Figma H2_Display 강조 (이전 64 → 72) */
+      font-weight: 500;            /* Medium */
+      line-height: 1.15;           /* Figma 좁은 행간 */
+      letter-spacing: -0.015em;    /* -1.08/72 */
+      color: #ffffff;
+      margin: 0;
+    }
+    /* 모바일 전용 줄바꿈 — 데스크탑에선 숨김 */
+    .mobile-br { display: none; }
+    /* 데스크탑 전용 줄바꿈 — 모바일에선 숨김 */
+    .desktop-br { display: inline; }
+
+    /* ── 하단 정보 영역 (좌: subtitle / 우: 부가 텍스트, 하단 정렬) ─── */
+    .ax-footer {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - (var(--section-px) * 2));
+      max-width: 1100px;
+      bottom: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;       /* 두 텍스트 하단 정렬 */
+      gap: 40px;
+      pointer-events: none;
+      font-size: 17px;             /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                 /* Figma gy-03 */
+    }
+    .ax-footer p { margin: 0; }
+    .ax-footer .ax-subtitle {
+      text-align: left;
+      font-size: 17px;             /* Figma Body2/R */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                 /* Figma gy-03 */
+    }
+    /* 우측 info 영역 — 라벨 / 값 컬럼 (Figma 13230:3474) */
+    .ax-footer-info {
+      display: flex;
+      gap: 5px;                    /* Figma gap-[5px] */
+      font-size: 15px;             /* Figma Label1 */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                 /* Figma gy-03 */
+      text-align: left;
+    }
+    .ax-footer-info-labels {
+      width: 65px;                 /* Figma w-[65px] */
+      display: flex;
+      flex-direction: column;
+      font-weight: 600;            /* Label1/SB */
+      flex-shrink: 0;
+    }
+    .ax-footer-info-values {
+      display: flex;
+      flex-direction: column;
+      font-weight: 400;            /* Label1/R */
+      white-space: nowrap;
+    }
+    /* 모바일에서만 추가 줄바꿈 (데스크톱은 기본 2줄 유지) */
+    .ax-footer br.m-only { display: none; }
+
+    /* ── 다크 섹션 공통 ─────────────────────────────────────────── */
+    /* 키캡(캔버스)이 모든 섹션에 떠 있어 dispersion 효과로 글로우 룩 자체 생성.
+       섹션 자체는 z-index 0으로 캔버스 뒤에 두고, 콘텐츠만 z-index 2로 위에. */
+    /* (v2 — 다크 섹션 모두 제거. .outcome은 라이트로 전환) */
+
+    /* ── 02 Problem (다크 섹션 + 채팅버블 카드) ─────────────────────
+       상단 300px 구간은 투명→#14191e 솔리드로 점진 페이드인 →
+       인트로(다크 캔버스)에서 섹션 2(다크 bg)로 자연스럽게 이어짐 */
+    .ax-section.problem {
+      background: linear-gradient(
+        to bottom,
+        rgba(20, 25, 30, 0) 0px,
+        #14191e 300px
+      );
+      color: #fff;
+      padding: 160px var(--section-px) 0;       /* 다음 섹션과 사이 = 160 (다음 섹션의 top 160만) */
+      position: relative;
+      z-index: 2;
+    }
+    .problem-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 60px;                    /* Figma: 헤드라인 ↔ 채팅 박스 */
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: center;          /* Figma items-center */
+    }
+    .problem-headline {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] */
+      align-items: center;          /* 가운데 정렬 */
+      text-align: center;
+    }
+    .problem-eyebrow {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;               /* Figma blue accent */
+      margin: 0;
+    }
+    .problem-headline h2 {
+      font-size: 56px;              /* Figma H3 size — 헤드라인 강조 */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #ffffff;
+      margin: 0;
+    }
+    .problem-headline-body {
+      font-size: 17px;              /* Figma Body2/R */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+      text-align: center;
+    }
+    .problem-headline-body p { margin: 0; }
+
+    /* ── 채팅 컨테이너 ─────────────────────────────────────────── */
+    .problem-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 880px;                 /* Figma w-[880px] */
+      max-width: 100%;
+      background: #1e252c;          /* 섹션보다 살짝 밝은 다크 (Figma) */
+      border-radius: 24px;
+      padding: 50px;
+      overflow: hidden;
+    }
+    .problem-chat-row {
+      display: flex;
+      width: 100%;
+    }
+
+    /* 채팅 버블 카드 (라이트) */
+    .problem-chat .problem-card {
+      background: #f8f8f8;          /* Figma gy-01 */
+      color: #14191e;
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow: hidden;
+      max-width: 85%;
+      /* 초기: 안 보임 상태 (섹션 진입 시 .appeared 클래스로 등장) */
+      opacity: 0;
+      transform: translateY(16px);          /* 살짝 아래에서 위로 올라옴 */
+      transition: opacity 0.65s ease-out,
+                  transform 0.65s ease-out;
+    }
+    /* 모든 버블 좌측 정렬 (Figma 13230:3484) — radius 18px, 좌하단 origin */
+    .problem-chat-row .problem-card {
+      border-radius: 18px;
+      align-items: flex-start;
+      text-align: left;
+      transform-origin: bottom left;     /* 좌하단에서 자라나는 느낌 */
+    }
+    .problem-chat-row { justify-content: flex-start; }
+    /* 등장 완료 상태 — 정상 디자인 */
+    .problem-chat-row.appeared .problem-card {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* reduced-motion 사용자: 즉시 표시, 트랜지션 없음 */
+    @media (prefers-reduced-motion: reduce) {
+      .problem-chat .problem-card {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+    .problem-card-text {
+      font-size: 16px;              /* Figma Body3/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #14191e;
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .problem-card-author {
+      font-size: 14px;              /* Figma Label2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #888;                  /* Figma gy-06 */
+      margin: 0;
+    }
+
+    /* ── 03 Signal (다크 + 2-컬럼 카드 + 파트너 로고 — Figma 13230:3509) ─── */
+    .ax-section.signal {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+    .signal-intro {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      text-align: center;
+    }
+    .signal-eyebrow {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .signal-title {
+      font-size: 56px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #ffffff;
+      margin: 0;
+    }
+    /* 2-컬럼 카드 — 이미지(좌) + 텍스트 패널(우), 각 flex:1 */
+    .signal-card {
+      display: flex;
+      align-items: stretch;
+      width: 1060px;
+      max-width: 100%;
+      height: 400px;
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    .signal-card-image {
+      flex: 1 1 0;
+      min-width: 0;
+      position: relative;
+      overflow: hidden;
+      border-top-left-radius: 24px;
+      border-bottom-left-radius: 24px;
+    }
+    .signal-card-image img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .signal-card-text {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;          /* 다크 카드 */
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border-top-right-radius: 24px;
+      border-bottom-right-radius: 24px;
+    }
+    .signal-card-title {
+      font-size: 36px;              /* Figma H6_Title/M */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      margin: 0;
+    }
+    .signal-card-body {
+      font-size: 17px;              /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+    }
+    .signal-card-body p { margin: 0; }
+
+    /* 파트너 로고 행 — 3개 가로 정렬, gap 70px, Figma 원본 비율 유지 */
+    .signal-partners {
+      display: flex;
+      gap: 70px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .signal-partner {
+      display: block;
+      width: auto;
+      flex-shrink: 0;
+    }
+    /* Figma 원본 사이즈 — 비율 깨지지 않도록 각 로고 명시 */
+    .signal-partner--molab  { width: 124.542px; height: 40px;    }   /* 고용노동부 */
+    .signal-partner--kcci   { width: 175.563px; height: 32px;    }   /* 대한상공회의소 */
+    .signal-partner--wanted { width: 130px;     height: 37px;    }   /* wanted */
+
+    /* ── 04 Solution (v2 — 흰 배경, 키캡+MARKETING blur 그대로 비침) ── */
+    /* ── 04 Solution (다크 + 체크리스트 — Figma 13230:3514) ─────────── */
+    .ax-section.solution {
+      background: #14191e;          /* 섹션3과 이어지는 다크 톤 */
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;                    /* Figma: 헤드라인 ↔ 체크리스트 */
+      position: relative;
+      z-index: 2;
+    }
+    .solution-intro {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] */
+      width: 100%;
+      max-width: 1100px;
+      align-items: center;
+      text-align: center;
+    }
+    .solution-eyebrow {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;               /* Figma blue accent */
+      margin: 0;
+    }
+    .solution-title {
+      font-size: 56px;              /* Figma H3 강조 */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #ffffff;
+      margin: 0;
+    }
+    .solution-body {
+      font-size: 17px;              /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+      text-align: center;
+    }
+    .solution-body p { margin: 0; }
+
+    /* ── 체크리스트 ───────────────────────────────────────────── */
+    .solution-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      width: 880px;                 /* Figma w-[880px] */
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] */
+    }
+    .solution-item {
+      background: #1e252c;          /* 다크 카드 */
+      border-radius: 18px;
+      padding: 20px 35px;           /* Figma px-35 py-20 */
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    /* 첫 카드 강조 (primary) */
+    .solution-item.is-primary {
+      background: #89c8ea;          /* Figma blue */
+    }
+    .solution-item-text {
+      font-size: 24px;              /* Figma P_Headline2/M */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+    .solution-item.is-primary .solution-item-text {
+      color: #14191e;               /* 강조 카드의 텍스트는 다크 */
+    }
+    .solution-item-check {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .solution-item-check svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* 기본 체크 아이콘 컬러 — 블루 원 + 다크 체크 */
+    .solution-item-check svg circle { fill: #89c8ea; transition: fill 0.4s ease; }
+    .solution-item-check svg path   { stroke: #14191e; transition: stroke 0.4s ease; }
+    /* 강조 상태 — 다크 원 + 블루 체크 (반전) */
+    .solution-item.is-primary .solution-item-check svg circle { fill: #14191e; }
+    .solution-item.is-primary .solution-item-check svg path   { stroke: #89c8ea; }
+
+    /* ── 05 Outcome (다크 + 4박스 가로 컨테이너 — Figma 13230:3529) ─── */
+    .ax-section.outcome {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;                    /* Figma: 헤드라인 ↔ 박스 */
+      position: relative;
+      z-index: 2;
+    }
+    .outcome-headline {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] */
+      align-items: center;
+      text-align: center;
+    }
+    .outcome-eyebrow {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;               /* Figma blue accent */
+      margin: 0;
+    }
+    .outcome-headline h2 {
+      font-size: 56px;              /* Figma H3 강조 */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #ffffff;
+      margin: 0;
+    }
+    .outcome-headline-body {
+      font-size: 17px;              /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+      margin: 0;
+    }
+
+    /* ── 4박스 가로 컨테이너 — 모서리만 radius, 박스 사이는 평평 ─ */
+    .outcome-boxes {
+      display: flex;
+      width: 1060px;                /* Figma w-[1060px] */
+      max-width: 100%;
+      border-radius: 24px;
+      overflow: hidden;
+      align-items: stretch;
+    }
+    .outcome-box {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;          /* 섹션보다 살짝 밝은 다크 (Figma) */
+      padding: 35px 30px;           /* Figma py-35 px-30 */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;                    /* Figma gap-[20px] (아이콘 ↔ 텍스트) */
+    }
+    .outcome-icon {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .outcome-icon img,
+    .outcome-icon svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;     /* 원본 비율 유지하며 60×60 컨테이너 안에 맞춤 */
+    }
+    .outcome-text {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;                    /* Figma gap-[10px] (h3 ↔ p) */
+    }
+    .outcome-text h3 {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      margin: 0;
+    }
+    .outcome-text p {
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    /* ── 06 Curriculum ─────────────────────────────────────────── */
+    .ax-section.curriculum {
+      background: #f2f1f1;
+      color: #000;
+      padding: 160px var(--section-px) 0;       /* 다음 섹션(tools)과 160px 간격 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;                    /* Figma: head ↔ body */
+      position: relative;
+      z-index: 2;   /* 캔버스(z-1) 위로 띄움 → 스크롤 시 자연스럽게 위로 슬라이드 */
+    }
+    .curriculum-head {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;                     /* Figma: title ↔ meta ↔ disclaimer */
+      width: 100%;
+      max-width: 1100px;
+    }
+    .curriculum-title {
+      font-size: 48px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .curriculum-meta {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+      margin: 0;
+    }
+    .curriculum-body {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .curriculum-tabs {
+      display: flex;
+      align-items: stretch;
+      width: 100%;
+    }
+    /* 좌측 주차 탭 */
+    .tab-list {
+      display: flex;
+      flex-direction: column;
+      width: 360px;
+      flex-shrink: 0;
+    }
+    .tab-item {
+      display: flex;
+      gap: 10px;
+      padding: 20px;
+      border: none;
+      border-top: 1px solid #333;
+      background: #f2f1f1;
+      color: #333;                  /* Figma gy-09 (비활성) */
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      text-align: left;
+      cursor: pointer;
+      width: 100%;
+      font-family: inherit;
+    }
+    .tab-item.active {
+      background: #14191e;          /* Figma --black */
+      color: #fff;
+      border-top-color: #14191e;
+      font-weight: 600;
+    }
+    .tab-item.active + .tab-item {
+      border-top-color: #14191e;
+    }
+    .tab-item.active:last-child {
+      border-bottom: 1px solid #14191e;
+    }
+    .tab-week {
+      width: 60px;                /* STEP 1 ~ 4 한 줄 노출 폭 확보 */
+      flex-shrink: 0;
+      white-space: nowrap;        /* "STEP 1" 줄바꿈 방지 */
+      font-weight: inherit;
+    }
+    /* 우측 상세 패널 */
+    .tab-detail {
+      flex: 1 0 0;
+      min-width: 0;
+      border-top: 1px solid #14191e;   /* Figma --black */
+      padding: 20px 70px 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .tab-detail-title {
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .detail-row {
+      display: flex;
+      gap: 10px;
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+    }
+    .detail-label {
+      font-weight: 600;
+      width: 50px;
+      flex-shrink: 0;
+    }
+    .detail-row p {
+      margin: 0;
+    }
+    .detail-row ul {
+      margin: 0;
+      padding-left: 25px;
+      list-style: disc;
+    }
+    .detail-row ul li {
+      font-size: 17px;
+    }
+    .detail-row .detail-label + ul li,
+    .detail-row .detail-label + p {
+      font-size: 16px;
+    }
+    .curriculum-disclaimer {
+      width: 100%;
+      max-width: 1100px;
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #767676;               /* Figma gy-07 */
+      margin: 0;
+    }
+
+    /* ── 07 Tools ──────────────────────────────────────────────── */
+    /* ── 09 Tools (다크 + 3개 카드 — Figma 13230:3664) ───────────────── */
+    .ax-section.tools {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+      z-index: 2;
+    }
+    .tools-title {
+      font-size: 30px;              /* Figma P_Headline1/SB */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+      text-align: center;
+      width: 100%;
+    }
+    .tools-grid {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+      width: 1060px;
+      max-width: 100%;
+    }
+    .tool-card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;
+      border-radius: 24px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 50px;
+    }
+    .tool-logo {
+      height: 30px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+    }
+    /* Claude 로고 — viewBox 139.636 × 29.9974, 원본 비율 유지 */
+    .tool-logo.logo-claude {
+      width: 139.636px;
+      height: 30px;
+    }
+    .tool-logo.logo-claude img {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* Ennoia 로고 — 6개 letter SVG를 absolute positioning 으로 조합 */
+    .tool-logo.logo-ennoia {
+      position: relative;
+      width: 118.026px;
+      height: 30px;
+    }
+    .tool-logo.logo-ennoia img {
+      position: absolute;
+      display: block;
+      width: auto;
+      height: auto;
+    }
+    /* 절대 위치 inset → width/height 자동 산출되도록 left/top + width/height 명시 */
+    .tool-logo.logo-ennoia img[style*="left:0"]            { width: 17.05%;  height: 71.23%; }   /* vec1 */
+    .tool-logo.logo-ennoia img[style*="left:19.5%"]        { width: 15.56%;  height: 69.86%; }   /* vec2 */
+    .tool-logo.logo-ennoia img[style*="left:38.02%"]       { width: 15.57%;  height: 69.86%; }   /* vec3 */
+    .tool-logo.logo-ennoia img[style*="left:56.02%"]       { width: 17.76%;  height: 71.23%; }   /* vec4 */
+    .tool-logo.logo-ennoia img[style*="left:75.87%"]       { width: 4.60%;   height: 98.63%; }   /* vec5 (i) */
+    .tool-logo.logo-ennoia img[style*="left:82.38%"]       { width: 17.62%;  height: 71.23%; }   /* vec6 */
+
+    .tool-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tool-name {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .tool-desc {
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;
+      margin: 0;
+    }
+
+    /* ── 10 Why (왜 프론티어즈인가요? — Figma 13230:3694) ────────────── */
+    .ax-section.why {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+    .why-head {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .why-title {
+      font-size: 56px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #fff;
+      margin: 0;
+    }
+    .why-body {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;
+    }
+    .why-body p { margin: 0; }
+    .why-grid {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      width: 1060px;
+      max-width: 100%;
+    }
+    .why-card {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 250px;
+      background: #1e252c;
+      border-radius: 24px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .why-card-head {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .why-card-label {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .why-card-title {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .why-card-desc {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ececec;
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    /* ── 11 Apply (지원 전 꼭 확인하세요 — Figma 13230:3715) ──────── */
+    .ax-section.apply {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+    .apply-title {
+      font-size: 56px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #fff;
+      margin: 0;
+      text-align: center;
+      width: 100%;
+    }
+    .apply-grid {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      width: 1060px;
+      max-width: 100%;
+    }
+    .apply-card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;
+      border-radius: 24px;
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      transition: background-color 0.3s ease;
+    }
+    /* 카드 내부 텍스트 모두 컬러 트랜지션 (호버 시 일괄 색 전환) */
+    .apply-block-title,
+    .apply-block-lead,
+    .apply-criteria li,
+    .apply-info-row dt,
+    .apply-info-row dd,
+    .apply-step-no,
+    .apply-step-name,
+    .apply-step-meta,
+    .apply-step-desc {
+      transition: color 0.3s ease;
+    }
+    .apply-block { display: flex; flex-direction: column; gap: 20px; }
+    .apply-block-title {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .apply-block-lead {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .apply-criteria {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .apply-criteria li {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+    .apply-criteria li::before { content: "✓ "; }   /* color inherit (li 컬러 따라감) → 호버 시 자동 변경 */
+
+    .apply-info { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+    .apply-info-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 15px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+    .apply-info-row dt {
+      width: 50px;
+      flex-shrink: 0;
+      font-weight: 600;
+      color: #fff;
+    }
+    .apply-info-row dd {
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      font-weight: 400;
+      color: #fff;
+    }
+
+    /* 지원 절차 — STEP 라벨 + 컨텐츠 */
+    .apply-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .apply-step {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+      font-size: 15px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+    .apply-step-no {
+      width: 50px;
+      flex-shrink: 0;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    .apply-step-content {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .apply-step-name {
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    .apply-step-meta {
+      font-weight: 400;
+      color: #fff;
+      margin: 0;
+    }
+    .apply-step-desc {
+      font-weight: 400;
+      color: #fff;
+      margin: 0;
+    }
+
+    /* 카드 호버 상태 — 블루 배경 + 다크 텍스트로 전환 (Figma 13250:3937) */
+    @media (hover: hover) {
+      .apply-card:hover                       { background: #89c8ea; }
+      .apply-card:hover .apply-block-title    { color: #14191e; }
+      .apply-card:hover .apply-block-lead     { color: #14191e; }
+      .apply-card:hover .apply-criteria li    { color: #333; }
+      .apply-card:hover .apply-info-row dt    { color: #14191e; }
+      .apply-card:hover .apply-info-row dd    { color: #333; }
+      .apply-card:hover .apply-step-no        { color: #14191e; }
+      .apply-card:hover .apply-step-name      { color: #14191e; }
+      .apply-card:hover .apply-step-meta      { color: #333; }
+      .apply-card:hover .apply-step-desc      { color: #333; }
+    }
+
+    /* ── 08 Reference ──────────────────────────────────────────── */
+    .ax-section.reference {
+      background: #fff;             /* Figma frtr-white */
+      color: #000;
+      padding: 160px var(--section-px) 0;       /* 다음 섹션(benefits)과 160px 간격 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 80px;                    /* Figma: testimonials-group ↔ satisfaction-group */
+      position: relative;
+      z-index: 2;
+    }
+    .reference-group {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;                    /* Figma: head ↔ testimonial-block */
+      width: 100%;
+      max-width: 1100px;
+    }
+    .reference-head {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .reference-title {
+      font-size: 48px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .reference-desc {
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+    }
+    .reference-desc p { margin: 0; }
+    .reference-block {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;                    /* Figma: testimonial-grid ↔ disclaimer */
+    }
+    .testimonial-grid {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+    }
+    .testimonial-card {
+      flex: 1 0 0;                  /* 가로 영역 균등 분배 (4개 카드 + 20px 갭) */
+      min-width: 0;
+      background: #14191e;          /* Figma --black (다크 카드) */
+      color: #fff;
+      border-radius: 24px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;   /* Figma: 메시지(상) ↔ author(하) — gap 없이 양 끝 정렬 */
+      min-height: 300px;            /* Figma h-[300px] */
+    }
+    .testimonial-card p {
+      font-size: 15px;              /* Figma 15px */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .testimonial-card p strong {
+      font-weight: 600;             /* Figma SemiBold */
+    }
+    .testimonial-author {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 15px;              /* Figma 15px */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+    }
+    .testimonial-name {
+      font-weight: 600;
+    }
+    .reference-disclaimer {
+      font-size: 15px;              /* Figma Label1/R */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #767676;               /* Figma gy-07 */
+      margin: 0;
+    }
+
+    .satisfaction {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;                    /* Figma: head ↔ cards */
+      align-items: flex-start;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .satisfaction-head {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;                    /* Figma: title ↔ desc */
+      width: 100%;
+    }
+    .satisfaction-title {
+      font-size: 30px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .satisfaction-desc {
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+    }
+    .satisfaction-desc p { margin: 0; }
+    .satisfaction-cards {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+    }
+    /* score-card-group: 라벨(밖) + 카드(border 박스) 구조 */
+    .score-card-group {
+      flex: 1 0 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;                    /* Figma: label ↔ card body */
+    }
+    .score-label {
+      font-size: 15px;              /* Figma Label1/SB */
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .score-card {
+      background: transparent;
+      border: 1px solid #ececec;    /* Figma gy-02 */
+      border-radius: 24px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .score-value {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 10px;
+      width: 266.666px;
+    }
+    .score-num {
+      font-size: 64px;
+      font-weight: 500;
+      line-height: 1.4;
+      letter-spacing: -0.015em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .score-unit {
+      font-size: 30px;
+      font-weight: 500;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+      color: #ccc;                  /* Figma gy-03 */
+      margin: 0;
+    }
+
+    /* ── 06 Benefits (다크 + 5개 카드 3×2 — Figma 13230:3562) ──────── */
+    .ax-section.benefits {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;                    /* Figma: 헤드라인 ↔ 카드 그리드 */
+      position: relative;
+      z-index: 2;
+    }
+    .benefits-head {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] */
+      width: 100%;
+      max-width: 1100px;
+      align-items: center;
+      text-align: center;
+    }
+    .benefits-eyebrow {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .benefits-title {
+      font-size: 56px;              /* Figma H3 강조 */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #ffffff;
+      margin: 0;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .benefits-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;                    /* Figma gap-[16px] (행 간격) */
+      width: 1060px;                /* Figma w-[1060px] */
+      max-width: 100%;
+    }
+    .benefits-row {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+    }
+    .benefit-card {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;          /* 섹션보다 살짝 밝은 다크 */
+      border: none;
+      border-radius: 24px;
+      padding: 25px;
+      height: 200px;                /* Figma h-[200px] */
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 30px;
+    }
+    .benefit-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;                     /* Figma gap-[8px] */
+    }
+    .benefit-label {
+      font-size: 15px;              /* Figma Label1/M */
+      font-weight: 500;             /* Medium */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #89c8ea;               /* Figma blue */
+      margin: 0;
+    }
+    .benefit-name {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .benefit-desc {
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ececec;               /* Figma gy-02 */
+      margin: 0;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    /* ── 10 Schedule (v2 — 2열 레이아웃: 좌 헤더 / 우 5 step) ──────── */
+    .ax-section.schedule {
+      background: transparent;
+      color: #000;
+      padding: 160px var(--section-px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .schedule-layout {
+      display: flex;
+      gap: 40px;                    /* Figma gap-[40px] */
+      width: 100%;
+      max-width: 1100px;
+      align-items: flex-start;
+    }
+    .schedule-head {
+      flex: 1 0 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .schedule-title {
+      font-size: 48px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #333;                  /* Figma gy-09 */
+      margin: 0;
+    }
+    .schedule-desc {
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+      margin: 0;
+    }
+    .schedule-steps {
+      flex: 1 0 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;                    /* Figma gap-[20px] */
+    }
+    .step-card {
+      border: none;
+      border-top: 1px solid #000;   /* Figma border-t */
+      padding: 24px;
+      background: transparent;
+      display: flex;
+      gap: 20px;                    /* 좌 step-head ↔ 우 step-body */
+      align-items: flex-start;
+    }
+    .step-head {
+      flex: 1 0 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: row;
+      gap: 15px;                    /* Figma gap-[15px] */
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      font-size: 17px;              /* Figma Body2/SB */
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .step-name {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    /* chevron: 데스크톱에서는 숨김 (모바일 아코디언 전용) */
+    .step-chevron { display: none; }
+    .step-body {
+      flex: 1 0 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 15px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+    }
+    /* "※ ..." 부속 노트 — sub-note 컬러 */
+    .step-meta-content p.sub-note,
+    .step-body .sub-note {
+      color: #767676;               /* Figma gy-07 */
+    }
+    .step-body > p { margin: 0; }
+    .step-text-block { display: flex; flex-direction: column; }
+    .step-text-block p { margin: 0; }
+    .step-meta {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .step-meta-label {
+      width: 26px;                  /* Figma w-[26px] */
+      flex-shrink: 0;
+      font-weight: 600;             /* Label1/SB */
+      margin: 0;
+    }
+    .step-meta-content {
+      flex: 1 0 0;
+      min-width: 0;
+      margin: 0;
+    }
+    .step-meta-content p { margin: 0; }
+    .step-meta-group { display: flex; flex-direction: column; width: 100%; }
+
+    /* ── 11 Price (v2 — 흰 배경, 키캡+MARKETING blur 그대로 비침) ── */
+    .ax-section.price {
+      background: transparent;
+      color: #000;
+      padding: 160px var(--section-px) 0;       /* 다음 섹션(instructors)과 160px 간격 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      position: relative;
+      z-index: 2;
+    }
+    .price-head {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-width: 1100px;
+    }
+    .price-title {
+      font-size: 48px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .price-desc {
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #333;                  /* Figma gy-09 */
+      margin: 0;
+    }
+    .price-box {
+      width: 100%;
+      max-width: 1100px;
+      /* 기본 상태: frost OFF, f8f8f8 20% 컬러만 (호버 시 frost 강화) */
+      background: rgba(248, 248, 248, 0.2);
+      border: 1px solid transparent;
+      color: #14191e;
+      border-radius: 24px;
+      padding: 50px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow: hidden;
+    }
+    .price-amount {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .price-label {
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .price-value {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.4;
+      letter-spacing: -0.015em;
+      color: #14191e;               /* Figma --black */
+      margin: 0;
+    }
+    .price-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .price-tag {
+      background: #f8f8f8;          /* Figma gy-01 (라이트) */
+      color: #767676;               /* Figma gy-07 */
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      padding: 4px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    /* 1기 오픈 혜택가 — tool-badge.paid 와 동일 컬러 (강조용) */
+    .price-tag.primary {
+      background: #14191e;          /* Figma --black */
+      color: #f8f8f8;               /* Figma gy-01 */
+    }
+    .price-notes {
+      margin: 0;
+      padding-left: 22px;
+      list-style: disc;
+      color: #333;                  /* Figma gy-09 */
+    }
+    .price-notes li {
+      font-size: 15px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── 12 Instructors (v2 — 흰 배경, 키캡+MARKETING blur 그대로 비침) ── */
+    /* ── 07 Instructors (다크 + 캐러셀 — Figma 13230:3605) ─────────── */
+    .ax-section.instructors {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+    .ins-head {
+      width: 1060px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      text-align: center;
+    }
+    .ins-eyebrow {
+      font-size: 24px;              /* Figma P_Headline2/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .ins-title {
+      font-size: 56px;              /* Figma H3 강조 */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #fff;
+      margin: 0;
+    }
+    .ins-headline-body {
+      font-size: 17px;              /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;
+    }
+    .ins-headline-body p { margin: 0; }
+
+    /* 캐러셀 */
+    .ins-carousel {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      align-items: center;
+      width: 1060px;
+      max-width: 100%;
+    }
+    /* 트랙 — 가로 스크롤 + scroll-snap (네이티브 드래그/스와이프) */
+    .ins-track {
+      width: 100%;
+      display: flex;
+      gap: 16px;                  /* 카드 간 간격 16px */
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      cursor: grab;
+      user-select: none;          /* 드래그 시 텍스트 선택 방지 */
+    }
+    .ins-track.is-grabbing { cursor: grabbing; }
+    .ins-track::-webkit-scrollbar { display: none; }
+    .ins-card {
+      flex: 0 0 100%;             /* 한 카드 = 트랙 너비 */
+      scroll-snap-align: start;
+      background: #1e252c;
+      border-radius: 24px;
+      padding: 50px;
+      display: flex;
+      gap: 40px;
+      align-items: flex-start;
+      box-sizing: border-box;
+    }
+    /* 드래그 중 이미지 드래그 방지 (브라우저 기본 이미지 드래그 비활성화) */
+    .ins-card img { pointer-events: none; -webkit-user-drag: none; }
+    .ins-photo {
+      width: 140px;
+      height: 140px;
+      border-radius: 12px;
+      overflow: hidden;
+      flex-shrink: 0;
+      background: #767676;
+    }
+    .ins-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .ins-content {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .ins-name-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;     /* Figma items-start */
+    }
+    .ins-name {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 24px;              /* Figma P_Headline2/B */
+      font-weight: 700;
+      line-height: 1.5;
+      letter-spacing: -0.24px;      /* Figma tracking-[-0.24px] */
+      color: #fff;
+      margin: 0;
+    }
+    .ins-role {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 17px;              /* Figma Body2/SB */
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.17px;      /* Figma tracking-[-0.17px] */
+      color: #89c8ea;
+      margin: 0;
+    }
+    .ins-bio {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.15px;      /* Figma tracking-[-0.15px] */
+      color: #ccc;
+      display: flex;
+      flex-direction: column;
+    }
+    .ins-bio p { margin: 0; }
+    .ins-divider {
+      height: 1px;
+      width: 100%;                  /* 컨텐츠 컬럼(=780px) 전체 */
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .ins-history {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;                     /* Figma Frame 1422237796 / 활동 이력 gap */
+    }
+    .ins-history-label {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;              /* Figma Label1/SB */
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.15px;
+      color: #fff;
+      margin: 0;
+    }
+    .ins-history ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .ins-history li {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;              /* Figma Label1/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.15px;
+      color: #ccc;
+    }
+    .ins-history li::before { content: "· "; }
+    .ins-history > p {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;              /* Figma Label1/R (멘토 카드 bio) */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.15px;
+      color: #ccc;
+      margin: 0;
+    }
+
+    /* 페이지네이션 도트 */
+    .ins-pager {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .ins-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      transition: background-color 0.3s ease;
+    }
+    .ins-dot.is-active {
+      background: #89c8ea;            /* 활성 시 컬러만 변경 (원형 유지) */
+    }
+    .instructor-disclaimer {
+      width: 100%;
+      max-width: 1100px;
+      font-size: 15px;                    /* Figma Label1/R */
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #767676;                     /* Figma gy-07 */
+      margin: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── 08 Roadmap (다크 + 단계 탭 — Figma 13230:3628) ─────────────── */
+    .ax-section.roadmap {
+      background: #14191e;
+      color: #fff;
+      padding: 160px var(--section-px) 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 60px;
+      position: relative;
+      z-index: 2;
+    }
+    .rm-head {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+      text-align: center;
+    }
+    .rm-eyebrow {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .rm-title {
+      font-size: 56px;
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.015em;
+      color: #fff;
+      margin: 0;
+    }
+    .rm-body {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      width: 1060px;
+      max-width: 100%;
+    }
+    /* 진행 바 */
+    .rm-progress {
+      height: 10px;
+      background: #1e252c;
+      border-radius: 10px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .rm-progress-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 20%;                /* 1/5 — JS 가 갱신 */
+      background: #89c8ea;
+      border-radius: 10px;
+      transition: width 0.4s ease;
+    }
+    /* 탭 레이아웃 (좌 360 + 우 flex) */
+    .rm-tabs {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      width: 100%;
+    }
+    .rm-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 360px;
+      flex-shrink: 0;
+    }
+    .rm-step {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 32px 28px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font-family: inherit;
+      transition: background-color 0.3s ease;
+    }
+    .rm-step.is-active {
+      background: #1e252c;
+      border-radius: 12px;
+    }
+    .rm-step-label {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #555;
+      margin: 0;
+      transition: color 0.3s ease;
+    }
+    .rm-step.is-active .rm-step-label { color: #89c8ea; }
+    .rm-step-title {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #555;
+      margin: 0;
+      transition: color 0.3s ease;
+    }
+    .rm-step.is-active .rm-step-title { color: #fff; }
+    /* 상세 패널 */
+    .rm-detail {
+      flex: 1 1 0;
+      min-width: 0;
+      background: #1e252c;
+      border-radius: 12px;
+      padding: 32px 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .rm-detail-head {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .rm-detail-label {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #89c8ea;
+      margin: 0;
+    }
+    .rm-detail-title {
+      font-size: 36px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .rm-detail-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+    /* `hidden` 속성이 display: flex 에 의해 무시되는 문제 해결 — 예시 없는 회차는 행 자체 숨김 */
+    .rm-detail-row[hidden] { display: none; }
+    .rm-detail-row-label {
+      width: 50px;
+      flex-shrink: 0;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+    .rm-detail-row-content {
+      flex: 1 1 0;
+      min-width: 0;
+      font-weight: 400;
+      color: #ccc;
+      margin: 0;
+    }
+    .rm-detail-row-list {
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: #ccc;
+    }
+    .rm-detail-row-list li {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+    .rm-detail-row-list li::before { content: "· "; }
+    /* 4단계 직군별 예시 */
+    .rm-examples {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rm-example {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .rm-example-role {
+      width: 60px;
+      flex-shrink: 0;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #fff;
+      margin: 0;
+    }
+    .rm-example-items {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;
+      margin: 0;
+    }
+
+    /* ── 13 FAQ + Notice ──────────────────────────────────────── */
+    /* ── 12 FAQ (라이트 + 아코디언 — Figma 13230:3769) ─────────────────── */
+    .ax-section.faq {
+      background: #ffffff;
+      color: #14191e;
+      padding: 160px var(--section-px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 36px;
+      position: relative;
+      z-index: 2;
+    }
+    .faq-title {
+      width: 1060px;
+      max-width: 100%;
+      font-size: 30px;              /* Figma P_Headline1/SB */
+      font-weight: 500;             /* Medium */
+      line-height: 1.5;
+      letter-spacing: -0.01em;
+      color: #14191e;
+      margin: 0;
+    }
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 1060px;
+      max-width: 100%;
+    }
+    .faq-item {
+      background: #f8f8f8;          /* Figma gy-01 */
+      border-radius: 24px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+    }
+    .faq-q {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      color: inherit;
+    }
+    .faq-q-text {
+      font-size: 20px;              /* Figma Body1/B */
+      font-weight: 700;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #14191e;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+    .faq-chevron {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #14191e;
+      transition: transform 0.3s ease;
+    }
+    .faq-chevron svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .faq-item.is-open .faq-chevron { transform: rotate(180deg); }
+
+    /* 답변 영역 — 기본 접힘 (max-height 0), 열림 시 JS가 scrollHeight 설정 */
+    .faq-a {
+      font-size: 17px;              /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #939393;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s ease, margin-top 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      margin-top: 0;
+    }
+    .faq-item.is-open .faq-a {
+      opacity: 1;
+      margin-top: 12px;
+    }
+    .faq-a > * { margin: 0; }
+    .faq-a p + p,
+    .faq-a p + ul,
+    .faq-a ul + p { margin-top: 0; }
+    .faq-a ul {
+      margin: 0;
+      padding-left: 22px;
+      list-style: disc;
+    }
+    .faq-a li {
+      font-size: 17px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── 스크롤 reveal: 뷰포트 진입 시 fade-in + 살짝 위로 슬라이드 ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+      will-change: opacity, transform;
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+
+    /* ── 모바일: 스크롤 자동 focus 효과 (호버 대체) ───────────────
+       카드가 뷰포트 중앙 영역(±40% 바깥)에 들어오면 hover와 동일한
+       lift + frost 효과를 자동 적용 — JS에서 .is-focused 토글 */
+    @media (max-width: 768px) {
+      .solution-card,
+      .outcome-card,
+      .price-box {
+        transition: transform 0.4s ease,
+                    background-color 0.4s ease,
+                    backdrop-filter 0.4s ease,
+                    -webkit-backdrop-filter 0.4s ease,
+                    border-color 0.4s ease,
+                    box-shadow 0.4s ease;
+      }
+      .instructor-card { transition: transform 0.4s ease; }
+      .instructor-info {
+        transition: background-color 0.4s ease,
+                    backdrop-filter 0.4s ease,
+                    -webkit-backdrop-filter 0.4s ease,
+                    border-color 0.4s ease,
+                    box-shadow 0.4s ease;
+      }
+      /* 뷰포트 중앙 진입 시 lift */
+      .solution-card.is-focused,
+      .outcome-card.is-focused,
+      .price-box.is-focused,
+      .instructor-card.is-focused {
+        transform: translateY(-6px);
+      }
+      /* 뷰포트 중앙 진입 시 background 강화 + frost + glass 두께 */
+      .solution-card.is-focused,
+      .outcome-card.is-focused,
+      .price-box.is-focused,
+      .instructor-card.is-focused .instructor-info {
+        background: rgba(248, 248, 248, 0.5);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow:
+          inset 0.5px 0.5px 1px rgba(255, 255, 255, 0.5),
+          inset -1px -1px 1px rgba(0, 0, 0, 0.04),
+          0 8px 32px rgba(20, 25, 30, 0.06);
+      }
+    }
+
+    /* Glass frost 카드 hover lift + frost 강화 — 마우스 환경(데스크톱)에서만 */
+    @media (hover: hover) {
+      /* 카드 자체: transform + background + (해당되는 경우) backdrop-filter 트랜지션 */
+      .solution-card,
+      .outcome-card,
+      .price-box {
+        transition: transform 0.3s ease,
+                    background-color 0.3s ease,
+                    backdrop-filter 0.3s ease,
+                    -webkit-backdrop-filter 0.3s ease,
+                    border-color 0.3s ease,
+                    box-shadow 0.3s ease;
+      }
+      .instructor-card { transition: transform 0.3s ease; }
+      .instructor-info {
+        transition: background-color 0.3s ease,
+                    backdrop-filter 0.3s ease,
+                    -webkit-backdrop-filter 0.3s ease,
+                    border-color 0.3s ease,
+                    box-shadow 0.3s ease;
+      }
+      /* 호버 lift */
+      .solution-card:hover,
+      .outcome-card:hover,
+      .price-box:hover,
+      .instructor-card:hover {
+        transform: translateY(-10px);
+      }
+      /* 호버 시 background 강화 + frost + glass 두께(border·inset shadow) 활성화 */
+      .solution-card:hover,
+      .outcome-card:hover,
+      .price-box:hover,
+      .instructor-card:hover .instructor-info {
+        background: rgba(248, 248, 248, 0.5);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow:
+          inset 0.5px 0.5px 1px rgba(255, 255, 255, 0.5),
+          inset -1px -1px 1px rgba(0, 0, 0, 0.04),
+          0 8px 32px rgba(20, 25, 30, 0.06);
+      }
+    }
+
+    /* ── 반응형 ────────────────────────────────────────────────── */
+    /* 중간 뷰포트(769px ~ 1100px): 카드 내 가로 컬럼 레이아웃이 답답해지는 구간 보정 */
+    @media (min-width: 769px) and (max-width: 1100px) {
+      /* testimonial 4-in-a-row → 2×2 그리드 */
+      .testimonial-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .testimonial-card {
+        flex: none;
+        min-height: 240px;
+      }
+      /* benefit-card 가로 2컬럼(타이틀|설명) → 세로 스택으로 전환
+         (좁은 폭에서 텍스트가 카드 밖으로 넘치지 않도록) */
+      .benefit-card {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .benefit-left {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 100%;
+      }
+      .benefit-desc {
+        flex: 0 0 auto;
+      }
+    }
+
+    /* 태블릿 브레이크포인트 제거 — 데스크탑에서 모바일(768px)로 직접 전환 */
+    @media (max-width: 768px) {
+      .ax-section.intro,
+      html.is-embedded .ax-section.intro { height: 625px; min-height: 625px; }
+      .ax-header { top: 32px; width: calc(100% - 40px); gap: 12px; }
+      .ax-eyebrow { font-size: 16px; line-height: 1.5; }   /* 모바일 축소 (데스크탑 24 → 16) */
+      .ax-headline-group { gap: 8px; }
+      .ax-title { font-size: 40px; line-height: 1.15; }
+      .ax-subtitle { font-size: 14px; line-height: 1.7; }
+      .mobile-br { display: inline; }
+      .desktop-br { display: none; }
+      .ax-footer { bottom: 32px; width: calc(100% - 40px); font-size: 13px; flex-direction: column; align-items: flex-start; gap: 16px; }
+      .ax-footer br.m-only { display: initial; }   /* 모바일: 각 어구마다 줄바꿈 */
+      .ax-footer-info { font-size: 13px; gap: 8px; }
+      .ax-footer-info-labels { width: auto; min-width: 56px; }
+      .ax-section.problem {
+        padding: 80px 20px;
+        background: linear-gradient(
+          to bottom,
+          rgba(20, 25, 30, 0) 0px,
+          #14191e 200px
+        );
+      }
+      /* 모바일: 헤드라인 + 채팅 컨테이너 (Figma 디자인 채팅버블 유지) */
+      .problem-grid { gap: 40px; align-items: center; }
+      .problem-headline { gap: 12px; align-items: center; text-align: center; }
+      .problem-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
+      .problem-headline h2 { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; white-space: normal; }
+      .problem-headline-body { font-size: 14px; color: #ccc; text-align: center; }
+      /* 모바일 채팅 컨테이너 — 가로 100%, 패딩·간격 축소 */
+      .problem-chat {
+        width: 100%;
+        padding: 24px 20px;
+        gap: 12px;
+        border-radius: 18px;
+      }
+      .problem-chat .problem-card {
+        padding: 14px 18px;
+        gap: 4px;
+        max-width: 90%;
+      }
+      .problem-chat-row .problem-card { border-radius: 14px; }
+      .problem-card-text { font-size: 14px; font-weight: 400; line-height: 1.6; }
+      .problem-card-text br { display: none; }   /* 모바일: 강제 줄바꿈 해제 → 자연 흐름 */
+      .problem-card-author { font-size: 12px; }
+      /* 섹션 03 모바일 — 다크 + 2-컬럼 카드 세로 stack + 파트너 로고 */
+      .ax-section.signal {
+        background: #14191e;
+        padding: 80px 20px 0;
+        gap: 30px;
+        align-items: stretch;
+      }
+      .signal-intro { gap: 12px; align-items: center; text-align: center; }
+      .signal-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
+      .signal-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
+      /* 카드 — 세로 stack (이미지 위, 텍스트 아래) */
+      .signal-card {
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        border-radius: 18px;
+      }
+      .signal-card-image {
+        flex: none;
+        width: 100%;
+        aspect-ratio: 880 / 600;
+        border-radius: 18px 18px 0 0;
+      }
+      .signal-card-text {
+        flex: none;
+        width: 100%;
+        padding: 24px 20px;
+        gap: 16px;
+        border-radius: 0 0 18px 18px;
+      }
+      .signal-card-title { font-size: 22px; color: #fff; }
+      .signal-card-body { font-size: 14px; color: #ccc; }
+      .signal-card-body br { display: none; }
+      /* 파트너 로고 — Figma 원본 비율 유지하며 축소 (각 약 80%) */
+      .signal-partners { gap: 28px; }
+      .signal-partner--molab  { width: 100px;   height: 32px;   }
+      .signal-partner--kcci   { width: 140px;   height: 26px;   }
+      .signal-partner--wanted { width: 104px;   height: 30px;   }
+      /* 섹션 04 Solution 모바일 — Figma 13230:3514 (다크 + 체크리스트) */
+      .ax-section.solution {
+        background: #14191e;
+        padding: 80px 20px;
+        gap: 40px;
+      }
+      .solution-intro { gap: 12px; align-items: center; text-align: center; }
+      .solution-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
+      .solution-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
+      .solution-body { font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: -0.01em; color: #ccc; text-align: center; }
+      .solution-body br { display: none; }
+      .solution-list { width: 100%; gap: 10px; }
+      .solution-item {
+        padding: 16px 20px;
+        border-radius: 14px;
+        gap: 12px;
+      }
+      .solution-item-text { font-size: 16px; font-weight: 500; }
+      .solution-item-check { width: 28px; height: 28px; }
+      /* 섹션 05 Outcome 모바일 — Figma 13230:3529 (다크 + 4박스 세로 스택) */
+      .ax-section.outcome {
+        background: #14191e;
+        padding: 80px 20px;
+        gap: 40px;
+      }
+      .outcome-headline { gap: 12px; align-items: center; text-align: center; }
+      .outcome-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
+      .outcome-headline h2 {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.4;
+        letter-spacing: -0.015em;
+        color: #fff;
+        white-space: normal;
+      }
+      .outcome-headline-body { font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: -0.01em; color: #ccc; text-align: center; }
+      /* 4박스: 세로 스택, 박스 간 1px 디바이더로 연속감 유지 */
+      .outcome-boxes {
+        flex-direction: column;
+        width: 100%;
+        border-radius: 18px;
+      }
+      .outcome-box {
+        padding: 24px 20px;
+        gap: 14px;
+      }
+      .outcome-box + .outcome-box { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+      .outcome-icon { width: 44px; height: 44px; }
+      .outcome-text h3 { font-size: 18px; }
+      .outcome-text p { font-size: 14px; }
+      /* 모바일 커리큘럼 — Figma 기준 아코디언 레이아웃 */
+      .ax-section.curriculum { padding: 80px 20px 40px; gap: 30px; }   /* prev outcome 다름=160 (80+80), next tools 같음=40 */
+      .curriculum-head { gap: 5px; }
+      .curriculum-title { font-size: 28px; line-height: 1.4; }
+      .curriculum-meta { font-size: 17px; }
+      .curriculum-meta .meta-line { display: block; }
+      .curriculum-meta .meta-sep { display: none; }
+      .curriculum-disclaimer { font-size: 17px; }
+      .curriculum-body { gap: 10px; }
+      .curriculum-tabs { flex-direction: column; align-items: stretch; }
+      .tab-list { width: 100%; display: flex; flex-direction: column; }
+      /* 탭 row: bg 투명, border 아래쪽만 */
+      .tab-item {
+        background: transparent;
+        color: #000;
+        border: none;
+        border-bottom: 1px solid #000;
+        padding: 10px 0;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 1.7;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        text-align: left;
+      }
+      .tab-item.active {
+        background: transparent;
+        color: #000;
+        border-top: none;
+        border-bottom: 1px solid #000;
+        font-weight: 600;
+      }
+      .tab-item.active + .tab-item { border-top: none; }
+      .tab-week { width: 60px; flex-shrink: 0; white-space: nowrap; }   /* STEP 1~4 한 줄 노출 */
+      .tab-title { flex: 1; }
+      /* Chevron 아이콘 (활성: 아래, 비활성: 위) */
+      .tab-item::after {
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>') no-repeat center / contain;
+        flex-shrink: 0;
+        transform: rotate(180deg);
+        transition: transform 0.2s ease;
+      }
+      .tab-item.active::after { transform: rotate(0deg); }
+      /* Detail 패널 (JS가 활성 탭 직후로 이동) */
+      .tab-detail { border-top: none; padding: 20px 0; width: 100%; }
+      .tab-detail-title { display: none; }
+      .detail-row { font-size: 15px; gap: 10px; flex-wrap: nowrap; }
+      .detail-label { width: 40px; flex-shrink: 0; font-size: 15px; }
+      .detail-row .detail-label + ul li,
+      .detail-row .detail-label + p { font-size: 15px; }
+      .detail-row ul { padding-left: 22px; margin-left: 0; }
+      /* 섹션 09 Tools 모바일 — Figma 13230:3664 (다크 + 캐러셀 가로 스크롤) */
+      .ax-section.tools {
+        background: #14191e;
+        padding: 80px 20px;
+        gap: 30px;
+        align-items: stretch;
+      }
+      .tools-title { font-size: 22px; font-weight: 500; color: #fff; }
+      .tools-grid {
+        width: calc(100% + 40px);
+        margin: 0 -20px;
+        padding: 0 20px;
+        gap: 12px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tools-grid::-webkit-scrollbar { display: none; }
+      .tool-card {
+        flex: 0 0 280px;
+        width: 280px;
+        padding: 24px 20px;
+        border-radius: 18px;
+        gap: 30px;
+      }
+      .tool-name { font-size: 20px; }
+      .tool-desc { font-size: 14px; }
+
+      /* 섹션 10 Why 모바일 — 카드 세로 스택 */
+      .ax-section.why { background: #14191e; padding: 80px 20px; gap: 40px; align-items: stretch; }
+      .why-head { gap: 10px; }
+      .why-title { font-size: 28px; line-height: 1.4; }
+      .why-body { font-size: 14px; }
+      .why-grid { flex-direction: column; gap: 12px; width: 100%; }
+      .why-card { height: auto; padding: 24px 20px; gap: 24px; border-radius: 18px; }
+      .why-card-title { font-size: 20px; }
+      .why-card-desc { font-size: 14px; }
+
+      /* 섹션 11 Apply 모바일 — 카드 세로 스택 */
+      .ax-section.apply { background: #14191e; padding: 80px 20px; gap: 30px; align-items: stretch; }
+      .apply-title { font-size: 28px; line-height: 1.4; }
+      .apply-grid { flex-direction: column; gap: 12px; width: 100%; }
+      .apply-card { padding: 24px 20px; gap: 30px; border-radius: 18px; }
+      .apply-block { gap: 16px; }
+      .apply-block-title { font-size: 20px; }
+      .apply-block-lead { font-size: 14px; }
+      .apply-criteria li { font-size: 14px; }
+      .apply-info-row { font-size: 14px; }
+      .apply-info-row dt { width: 44px; }
+      .apply-step { font-size: 14px; gap: 12px; }
+      .apply-step-no { width: 56px; }
+      .apply-step-content { gap: 6px; }
+      /* 섹션 08 Reference 모바일 — Figma 13077:16371 (캐러셀 디자인) */
+      .ax-section.reference {
+        padding: 80px 20px 40px;       /* prev tools 다름=160, next benefits 같음=40 */
+        gap: 40px;                     /* Figma: reference-group ↔ satisfaction */
+        align-items: stretch;
+      }
+      .reference-group { gap: 30px; }   /* head ↔ testimonial-block */
+      .reference-block { gap: 15px; }   /* testimonial-grid ↔ disclaimer */
+      .satisfaction { gap: 10px; }      /* satisfaction-head ↔ cards */
+      .satisfaction-head { gap: 5px; }
+      .reference-title { font-size: 28px; font-weight: 500; line-height: 1.5; letter-spacing: -0.015em; }
+      .reference-desc, .satisfaction-desc { font-size: 16px; }
+      .satisfaction-title { font-size: 20px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; }
+      .reference-disclaimer { font-size: 13px; line-height: 1; letter-spacing: 0; }
+
+      /* 후기 카드 캐러셀 */
+      .testimonial-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -20px;
+        padding: 0 20px;
+        width: calc(100% + 40px);
+      }
+      .testimonial-grid::-webkit-scrollbar { display: none; }
+      .testimonial-card {
+        flex: 0 0 300px;
+        width: 300px;
+        padding: 20px;
+        border-radius: 18px;
+        gap: 5px;
+        min-height: auto;
+        justify-content: flex-start;
+      }
+      .testimonial-card p { font-size: 15px; }
+      .testimonial-author { font-size: 15px; gap: 10px; margin-top: auto; }   /* 카드 하단 고정 */
+
+      /* 만족도 카드 캐러셀 — label을 카드 안으로 (score-card-group이 visual card 역할) */
+      .satisfaction-cards {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -20px;
+        padding: 0 20px;
+        width: calc(100% + 40px);
+      }
+      .satisfaction-cards::-webkit-scrollbar { display: none; }
+      .score-card-group {
+        flex: 0 0 300px;
+        width: 300px;
+        padding: 30px;
+        border: 1px solid #ececec;
+        border-radius: 24px;
+        background: #fff;
+        align-items: center;
+        gap: 0;
+      }
+      .score-card {
+        flex: none;
+        width: auto;
+        background: transparent;
+        border: none;
+        padding: 0;
+        align-items: center;
+      }
+      .score-card:last-child { grid-column: auto; }
+      .score-num { font-size: 64px; }
+      .score-unit { font-size: 30px; }
+      /* 섹션 06 Benefits 모바일 — Figma 13230:3562 (다크, 멘토 캐러셀 패턴) */
+      .ax-section.benefits {
+        background: #14191e;
+        padding: 80px 20px;
+        gap: 30px;
+        align-items: stretch;
+      }
+      .benefits-head { gap: 12px; align-items: center; text-align: center; width: 100%; }
+      .benefits-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; color: #89c8ea; }
+      .benefits-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
+      /* 카드들 가로 스크롤 캐러셀 (멘토 카드 패턴 참고) — 행 평탄화 */
+      .benefits-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        width: calc(100% + 40px);
+        margin: 0 -20px;
+        padding: 10px 20px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .benefits-grid::-webkit-scrollbar { display: none; }
+      .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
+      .benefit-card {
+        flex: 0 0 280px;
+        width: 280px;
+        height: auto;
+        min-height: 180px;
+        padding: 24px;
+        border-radius: 18px;
+        gap: 24px;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .benefit-header { gap: 6px; }
+      .benefit-label { font-size: 13px; }
+      .benefit-name { font-size: 20px; }
+      .benefit-desc { font-size: 13px; }
+      /* 모바일: 헤더 / step 리스트 세로 stack, step row 내부도 세로 stack */
+      /* 섹션 10 Schedule 모바일 — Figma 13067:3495 */
+      .ax-section.schedule { padding: 20px 20px 40px; }   /* schedule 위 섹션과의 gap 40 (price bottom 20 + schedule top 20), 아래 동일 bg = 40 */
+      .schedule-layout {
+        flex-direction: column;
+        gap: 30px;
+        align-items: stretch;        /* 모바일: 자식이 가로 폭 100% 차지하도록 */
+      }
+      .schedule-head { gap: 5px; width: 100%; }
+      .schedule-steps { width: 100%; }
+      .step-card { width: 100%; }
+      .schedule-title { font-size: 28px; font-weight: 500; line-height: 1.5; letter-spacing: -0.015em; }
+      .schedule-desc { font-size: 16px; }
+      .schedule-steps { gap: 10px; }
+      .step-card {
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        border-top: none;            /* Figma: 카드 상단 라인 없음 */
+        align-items: stretch;        /* step-head/body가 가로 100% 차지 */
+      }
+      .step-head {
+        padding: 10px 0;             /* Figma py-[10px] */
+        border-bottom: 1px solid #14191e;
+        flex-direction: row;
+        gap: 10px;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+      }
+      .step-num { font-size: 16px; font-weight: 600; }
+      .step-name { font-size: 16px; font-weight: 600; flex: 1; }
+      /* chevron: 모바일에서 노출, is-open에 따라 회전 */
+      .step-chevron {
+        display: block;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        color: #14191e;
+        transition: transform 0.2s ease;
+      }
+      /* 닫힌 상태: chevron-up (^) — Figma 디자인 따름 */
+      .step-card:not(.is-open) .step-chevron {
+        transform: rotate(180deg);
+      }
+      /* 닫힌 상태: body 숨김 */
+      .step-card:not(.is-open) .step-body {
+        display: none;
+      }
+      .step-body {
+        padding: 20px 0;             /* Figma py-[20px] */
+        gap: 10px;
+        font-size: 15px;
+      }
+      .step-meta-label { width: 40px; }
+      .ax-section.price { padding: 120px 20px 40px; gap: 30px; }   /* benefits→price = 160 (40+120), price→instructors = 80 */
+      .price-head { gap: 20px; }
+      .price-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; }
+      .price-desc { font-size: 15px; }
+      .price-box { padding: 20px; gap: 16px; }
+      .price-value { font-size: 40px; }
+      .price-tags { gap: 8px; }
+      .price-tag { font-size: 13px; }
+      .price-notes li { font-size: 13px; }
+      /* 섹션 07 Instructors 모바일 — Figma 13230:3605 (다크 + 캐러셀) */
+      .ax-section.instructors {
+        background: #14191e;
+        padding: 80px 20px;
+        gap: 40px;
+        align-items: center;
+      }
+      .ins-head { width: 100%; gap: 12px; }
+      .ins-eyebrow { font-size: 16px; font-weight: 600; color: #89c8ea; }
+      .ins-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
+      .ins-headline-body { font-size: 14px; color: #ccc; }
+      .ins-carousel { width: 100%; gap: 24px; }
+      .ins-card {
+        flex-direction: column;
+        padding: 30px 24px;
+        gap: 24px;
+        border-radius: 18px;
+      }
+      .ins-photo { width: 100px; height: 100px; border-radius: 10px; }
+      .ins-content { gap: 12px; width: 100%; }
+      .ins-name-row { flex-wrap: wrap; gap: 6px; }
+      .ins-name { font-size: 20px; }
+      .ins-role { font-size: 14px; }
+      .ins-bio { font-size: 14px; }
+      .ins-history-label { font-size: 14px; }
+      .ins-history li { font-size: 14px; }
+
+      /* 섹션 08 Roadmap 모바일 — 좌측 탭이 가로 스택, 컴팩트 폰트 */
+      .ax-section.roadmap { background: #14191e; padding: 80px 20px; gap: 30px; }
+      .rm-head { gap: 12px; }
+      .rm-eyebrow { font-size: 16px; }
+      .rm-title { font-size: 28px; line-height: 1.4; }
+      .rm-body { width: 100%; gap: 20px; }
+      .rm-tabs { flex-direction: column; gap: 12px; }
+      .rm-steps { width: 100%; gap: 8px; }
+      .rm-step { padding: 16px 20px; border-radius: 8px; gap: 4px; }
+      .rm-step.is-active { border-radius: 10px; }
+      .rm-step-label { font-size: 13px; }
+      .rm-step-title { font-size: 14px; }
+      .rm-detail { padding: 24px 20px; gap: 16px; border-radius: 10px; }
+      .rm-detail-head { gap: 6px; }
+      .rm-detail-label { font-size: 14px; }
+      .rm-detail-title { font-size: 22px; }
+      .rm-detail-row { font-size: 14px; gap: 8px; }
+      .rm-detail-row-label { width: 40px; font-size: 14px; }
+      .rm-detail-row-content { font-size: 14px; }
+      .rm-detail-row-list li { font-size: 14px; }
+      .rm-examples { gap: 6px; }
+      .rm-example { gap: 10px; flex-direction: column; }
+      .rm-example-role { width: auto; font-size: 13px; }
+      .rm-example-items { font-size: 13px; }
+
+      /* 모바일: 헤드라인 본문 강제 줄바꿈 해제 — 자연스럽게 어절 단위 흐름 */
+      .problem-headline-body br,
+      .signal-body br,
+      .solution-body br,
+      .outcome-headline-body br,
+      .reference-desc br,
+      .satisfaction-desc br,
+      .benefits-desc br,
+      .schedule-desc br,
+      .instructor-desc br,
+      .tools-desc br,
+      .curriculum-meta br,
+      .curriculum-disclaimer br,
+      .price-desc br { display: none; }
+      .problem-headline-body p,
+      .signal-body p,
+      .solution-body p,
+      .outcome-headline-body p,
+      .benefits-desc p,
+      .schedule-desc p,
+      .instructor-desc p,
+      .tools-desc p { display: inline; }
+      /* row 1 (intro + lead card): flatten — 자식들이 섹션 직속 children 처럼 */
+      .instructor-row:has(.instructor-intro) { display: contents; }
+      /* row 2 (멘토 3카드): 가로 스크롤 캐러셀 */
+      .instructor-row:not(:has(.instructor-intro)) {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -20px;
+        padding: 10px 20px;             /* top/bottom 10px 여백 → 카드 radius·shadow 잘림 방지 */
+        width: calc(100% + 40px);
+        max-width: none;                /* desktop max-width 1100 override */
+        align-items: stretch;           /* 가장 긴 카드 높이에 맞춰 모든 카드 세로 통일 */
+        justify-content: flex-start;    /* desktop justify-content:center override → 첫 카드부터 노출 */
+      }
+      /* 카드 내부 info 영역이 남는 vertical 공간을 채우도록 — bio 길이 차이로 인한 높이 차이 흡수 */
+      .instructor-row:not(:has(.instructor-intro)) .instructor-card {
+        align-self: stretch;
+      }
+      .instructor-row:not(:has(.instructor-intro)) .instructor-info {
+        flex: 1 1 auto;
+      }
+      .instructor-row:not(:has(.instructor-intro))::-webkit-scrollbar { display: none; }
+
+      .instructor-intro { width: 100%; gap: 16px; padding-bottom: 17px; }
+      /* 카드 공통 */
+      .instructor-card { flex: none; max-width: 100%; }
+      .instructor-img { height: 240px; }
+      /* 모바일에서 이미지를 우측 상단 기준으로 정렬 — Figma의 right-0 매칭 (인물 실루엣이 우측에 위치) */
+      .instructor-img > img { object-position: right top; }
+      .instructor-label { top: 25px; left: 25px; gap: 6px; }   /* Figma top-25, left-25 */
+      .instructor-label .role { font-size: 12px; font-weight: 500; }
+      .instructor-label .name { font-size: 20px; font-weight: 600; }
+      .instructor-info { padding: 25px; gap: 10px; }   /* Figma p-25 */
+      .instructor-position, .instructor-bio { font-size: 15px; }
+
+      /* 강사(lead) 카드 — 멘토와 동일하게 300 wide. 이미지 배경만 gy-07로 차별화 */
+      .instructor-card--lead { width: 300px; max-width: 300px; }
+      .instructor-card--lead .instructor-img {
+        width: 100%;
+        background: #767676;       /* Figma gy-07 (강사 카드만 다름) */
+      }
+      .instructor-card--lead .instructor-info { width: 100%; }
+      .instructor-card--lead .instructor-label { gap: 5px; }   /* Figma 강사 카드만 gap-5 */
+
+      /* 멘토 카드: 300 wide */
+      .instructor-row:not(:has(.instructor-intro)) .instructor-card {
+        flex: 0 0 300px;
+        width: 300px;
+      }
+      .instructor-row:not(:has(.instructor-intro)) .instructor-img { width: 300px; }
+      .instructor-row:not(:has(.instructor-intro)) .instructor-info { width: 300px; }
+
+      /* 강사 카드가 캐러셀에 합쳐졌을 때 — 멘토와 동일하게 300 wide */
+      .instructor-row:not(:has(.instructor-intro)) .instructor-card--lead {
+        flex: 0 0 300px;
+        width: 300px;
+      }
+      .instructor-row:not(:has(.instructor-intro)) .instructor-card--lead .instructor-img { width: 300px; }
+      .instructor-row:not(:has(.instructor-intro)) .instructor-card--lead .instructor-info { width: 300px; }
+
+      /* 안내문구: 멘토 캐러셀 바로 아래에 위치 (gap 10) */
+      .instructor-disclaimer {
+        font-size: 13px;                  /* Figma Caption1/R */
+        line-height: 1;
+        letter-spacing: 0;
+        color: #767676;
+        margin-top: -20px;                /* 섹션 gap 30 → 효과적 10px (carousel ↔ disclaimer) */
+      }
+      /* 섹션 12 FAQ 모바일 — 라이트 + 아코디언 */
+      .ax-section.faq { background: #fff; padding: 80px 20px; gap: 24px; align-items: stretch; }
+      .faq-title { width: 100%; font-size: 22px; }
+      .faq-list { width: 100%; gap: 12px; }
+      .faq-item { padding: 24px 20px; border-radius: 18px; }
+      .faq-q { gap: 12px; }
+      .faq-q-text { font-size: 16px; line-height: 1.6; }
+      .faq-chevron { width: 24px; height: 24px; }
+      .faq-a { font-size: 14px; }
+      .faq-a li { font-size: 14px; }
+      .faq-item.is-open .faq-a { margin-top: 10px; }
+
+      /* 모바일: 모든 카드 radius 18px로 통일 */
+      .problem-card,
+      .solution-card,
+      .outcome-card,
+      .tool-card,
+      .testimonial-card,
+      .score-card,
+      .benefit-card,
+      .price-box,
+      .instructor-card {
+        border-radius: 18px;
+      }
+      .instructor-img {
+        border-top-left-radius: 18px;
+        border-top-right-radius: 18px;
+      }
+      .instructor-info {
+        border-bottom-left-radius: 18px;
+        border-bottom-right-radius: 18px;
+      }
+
+      /* ── 모바일 헤드라인 통일 (인트로 + problem/signal/solution/outcome 다크 섹션 제외) ────────
+         h2 → Mobile Event H5_Title/M  (28px Medium, line-height 1.5)
+         p  → Mobile Event Body1/R     (16px Regular, line-height 1.7)
+         h2 ↔ p gap = 5px  /  headline ↔ content gap = 30px */
+      .curriculum-title,
+      .tools-title,
+      .reference-title,
+      .schedule-title,
+      .price-title,
+      .instructor-title {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.015em;
+      }
+      .tools-desc,
+      .reference-desc,
+      .satisfaction-desc,
+      .schedule-desc,
+      .price-desc,
+      .instructor-desc {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.01em;
+      }
+      .curriculum-head,
+      .tools-head,
+      .reference-head,
+      .schedule-head,
+      .price-head,
+      .instructor-intro {
+        gap: 5px;
+      }
+
+      /* 모바일 노트/disclaimer 텍스트 일괄 — Mobile Event Caption1/R
+         13px Regular, line-height 1.7, letter-spacing 0
+         (가격섹션 .price-notes li 는 이전 스타일 유지하므로 제외) */
+      .curriculum-disclaimer,
+      .reference-disclaimer,
+      .instructor-disclaimer,
+      .step-body .sub-note,
+      .step-meta-content p.sub-note {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="ax-section intro">
+    <header class="ax-header">
+      <p class="ax-eyebrow">수강료 0원 · 매월 최대 80만원 지급 · 선착순 35명</p>
+      <h1 class="ax-title">AI Native<br>Career Camp</h1>
+    </header>
+
+    <footer class="ax-footer">
+      <p class="ax-subtitle">부트캠프 수료 이후에도 취업하지 못한<br>청년을 위한 AI 네이티브 커리어 캠프</p>
+      <div class="ax-footer-info">
+        <div class="ax-footer-info-labels">
+          <p>대상</p>
+          <p>신청 기간</p>
+        </div>
+        <div class="ax-footer-info-values">
+          <p>PO · 개발 · 디자인 · 마케팅 · HR 직군</p>
+          <p>7월 10일 금요일 13시까지 (조기 마감 가능)</p>
+        </div>
+      </div>
+    </footer>
+  </section>
+
+  <section class="ax-section problem">
+    <div class="problem-grid">
+      <div class="problem-headline">
+        <p class="problem-eyebrow">부트캠프 수료도 했고 포트폴리오도 만들었는데</p>
+        <h2>아직 취업 전이신가요?</h2>
+        <div class="problem-headline-body">
+          <p>많은 취업 준비생분들이 교육을 수료한 이후에도</p>
+          <p>기업이 원하는 수준의 결과물과 실무 역량을 충분히 보여주는 것에 어려움을 겪고 있습니다.</p>
+        </div>
+      </div>
+      <div class="problem-chat">
+        <div class="problem-chat-row left">
+          <article class="problem-card">
+            <p class="problem-card-text">AI 써야 한다는 건 아는데 내 직군에 어떻게 적용해야 할지 아무도 알려주질 않아요.</p>
+            <p class="problem-card-author">디자인 직군 준비 중 · 27세</p>
+          </article>
+        </div>
+        <div class="problem-chat-row left">
+          <article class="problem-card">
+            <p class="problem-card-text">포트폴리오를 다시 만들어야 한다는 건 알겠는데<br>어디서부터 시작해야 할지도 모르겠고 혼자 하기엔 한계가 있어요.</p>
+            <p class="problem-card-author">HR 직군 준비 중 · 29세</p>
+          </article>
+        </div>
+        <div class="problem-chat-row left">
+          <article class="problem-card">
+            <p class="problem-card-text">부트캠프 수료하고 포트폴리오도 만들었는데 면접에서 항상 ‘실무 경험이 부족하다’는 말을 들어요.</p>
+            <p class="problem-card-author">마케팅 직군 준비 중 · 28세</p>
+          </article>
+        </div>
+        <div class="problem-chat-row left">
+          <article class="problem-card">
+            <p class="problem-card-text">이력서 100장 넘게 넣었는데 서류에서 계속 떨어져요. 뭘 더 해야 할지 모르겠어요.</p>
+            <p class="problem-card-author">개발 직군 준비 중 · 26세</p>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ax-section signal">
+    <div class="signal-intro">
+      <p class="signal-eyebrow">프론티어즈의 차별점</p>
+      <h2 class="signal-title">2026년 미래내일 일경험</h2>
+    </div>
+    <div class="signal-card">
+      <div class="signal-card-image">
+        <img src="signal_wanted_ground.png" alt="원티드 그라운드 오피스" loading="lazy" decoding="async">
+      </div>
+      <div class="signal-card-text">
+        <h3 class="signal-card-title">교육 과정이 아닌<br>커리어 캠프</h3>
+        <div class="signal-card-body">
+          <p>프론티어즈는 또 하나의 교육 과정이 아닙니다.</p>
+          <p>현직자와 함께 AI를 활용한 실전 프로젝트를 수행하며,</p>
+          <p>포트폴리오 완성과 취업 지원을 통해 취업 경쟁력을</p>
+          <p>갖출 수 있도록 설계한 커리어 캠프입니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="signal-partners">
+      <img src="partner_molab.png" alt="고용노동부" class="signal-partner signal-partner--molab" loading="lazy" decoding="async">
+      <img src="partner_kcci.svg" alt="대한상공회의소" class="signal-partner signal-partner--kcci" loading="lazy" decoding="async">
+      <img src="logo_wanted_horizontal.png" alt="wanted" class="signal-partner signal-partner--wanted" loading="lazy" decoding="async">
+    </div>
+  </section>
+
+  <section class="ax-section solution">
+    <div class="solution-intro">
+      <p class="solution-eyebrow">기업이 확인하는 것</p>
+      <h2 class="solution-title">“무엇을 배웠는지”보다<br>“무엇을 만들었는지”를 봅니다</h2>
+      <div class="solution-body">
+        <p>기업은 더 이상 수료증을 보지 않습니다. AI를 활용해 어떤 문제를 해결했는지, 어떤 결과물을 만들었는지를 확인합니다.</p>
+        <p>같은 방식으로 준비하면 결과도 달라지지 않습니다.</p>
+        <p>지금 필요한 것은 또 다른 강의가 아니라 AI를 활용한 실전 경험과 결과물입니다.</p>
+      </div>
+    </div>
+
+    <ul class="solution-list">
+      <li class="solution-item is-primary">
+        <span class="solution-item-text">AI를 실제 업무에 활용한 경험</span>
+        <span class="solution-item-check" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="18"/>
+            <path d="M11 18.5L16 23.5L25 14" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </li>
+      <li class="solution-item">
+        <span class="solution-item-text">문제 해결 과정</span>
+        <span class="solution-item-check" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="18"/>
+            <path d="M11 18.5L16 23.5L25 14" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </li>
+      <li class="solution-item">
+        <span class="solution-item-text">실무 수준의 포트폴리오</span>
+        <span class="solution-item-check" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="18"/>
+            <path d="M11 18.5L16 23.5L25 14" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </li>
+      <li class="solution-item">
+        <span class="solution-item-text">새로운 도구를 빠르게 학습하고 적용하는 역량</span>
+        <span class="solution-item-check" aria-hidden="true">
+          <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="18" cy="18" r="18"/>
+            <path d="M11 18.5L16 23.5L25 14" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="ax-section outcome">
+    <div class="outcome-headline">
+      <p class="outcome-eyebrow">프론티어즈 과정 한눈에 보기</p>
+      <h2>16주 동안 이렇게 만들어갑니다</h2>
+      <p class="outcome-headline-body">4번의 AI 실전 파트, 현직자 1:1 멘토링, 직군 맞춤 AX 포트폴리오까지 취업 완성에 필요한 모든 것을 커리어 캠프에서 갖추세요.</p>
+    </div>
+    <div class="outcome-boxes">
+      <article class="outcome-box">
+        <div class="outcome-icon" aria-hidden="true">
+          <img src="icon_dataflow3.svg" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="outcome-text">
+          <h3>AI 실전 프로젝트</h3>
+          <p>총 4번의 실전 파트로 직접 만들며 AI를 익힙니다.</p>
+        </div>
+      </article>
+      <article class="outcome-box">
+        <div class="outcome-icon" aria-hidden="true">
+          <img src="icon_user_check.svg" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="outcome-text">
+          <h3>현직자 멘토링</h3>
+          <p>원티드랩 현직자의 시각으로 내 포트폴리오를 검증받습니다.</p>
+        </div>
+      </article>
+      <article class="outcome-box">
+        <div class="outcome-icon" aria-hidden="true">
+          <img src="icon_layers_three.svg" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="outcome-text">
+          <h3>AI 포트폴리오 2개+</h3>
+          <p>기업에서 관심 갖는 결과물이 손에 남습니다.</p>
+        </div>
+      </article>
+      <article class="outcome-box">
+        <div class="outcome-icon outcome-icon--symbol" aria-hidden="true">
+          <img src="icon_wanted_symbol.svg" alt="" loading="lazy" decoding="async">
+        </div>
+        <div class="outcome-text">
+          <h3>취업 준비 완성</h3>
+          <p>이력서·면접·포지션 추천까지 원티드가 함께합니다.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ax-section benefits">
+    <div class="benefits-head">
+      <p class="benefits-eyebrow">수강생 혜택</p>
+      <h2 class="benefits-title">이번엔 제대로 끝낼 수 있도록<br>필요한 모든 것을 지원합니다</h2>
+    </div>
+
+    <div class="benefits-grid">
+      <div class="benefits-row">
+        <article class="benefit-card">
+          <div class="benefit-header">
+            <p class="benefit-label">최대 320만 원</p>
+            <h3 class="benefit-name">참여자 수당</h3>
+          </div>
+          <p class="benefit-desc">매월 최대 80만원 지급, 교육 기간 동안 취업 준비에 집중할 수 있도록 지원합니다.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-header">
+            <p class="benefit-label">4개월 무상 대여</p>
+            <h3 class="benefit-name">고사양 노트북 지원</h3>
+          </div>
+          <p class="benefit-desc">장비 걱정은 내려놓으세요. 교육 기간 내내 고사양 노트북을 무상으로 사용할 수 있습니다.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-header">
+            <p class="benefit-label">취업 준비 완성을 위한</p>
+            <h3 class="benefit-name">커리어 코칭 40시간</h3>
+          </div>
+          <p class="benefit-desc">전담 커리어 코치의 특강, 1:1 코칭으로 취업까지 완성해 보세요.</p>
+        </article>
+      </div>
+      <div class="benefits-row">
+        <article class="benefit-card">
+          <div class="benefit-header">
+            <p class="benefit-label">AI 툴 전면 지원</p>
+            <h3 class="benefit-name">AI 툴 전면 지원</h3>
+          </div>
+          <p class="benefit-desc">Claude PRO·MAX, Ennoia, Think Code까지 포트폴리오 완성에 필요한 AI 툴을 모두 지원합니다.</p>
+        </article>
+        <article class="benefit-card">
+          <div class="benefit-header">
+            <p class="benefit-label">유료 강의 무상 제공</p>
+            <h3 class="benefit-name">Claude VOD 무상 제공</h3>
+          </div>
+          <p class="benefit-desc">Claude 활용법부터 실무 적용까지 단계별로 학습할 수 있는 유료 강의를 무상으로 제공합니다.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="ax-section instructors">
+    <div class="ins-head">
+      <p class="ins-eyebrow">강사, 멘토진 소개</p>
+      <h2 class="ins-title">AI 전문가에게 배우고,<br>현직자 멘토와 함께 완성합니다</h2>
+      <div class="ins-headline-body">
+        <p>AX를 구현하는 기준은 강사에게 배우고, 내 업무에 맞게 적용하는 방식은 멘토와 함께 점검합니다.</p>
+        <p>강의에서 실무 구조를 익히고, 멘토링에서는 산출물에 대한 피드백과 함께 지금의 업무방식, 앞으로의 성장 방향과 커리어 고민을 함께 정리해나갑니다.</p>
+      </div>
+    </div>
+
+    <div class="ins-carousel">
+      <div class="ins-track">
+        <article class="ins-card" data-index="0">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="강사 김대영" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김대영</p>
+              <p class="ins-role">프론티어즈 강사</p>
+            </div>
+            <div class="ins-bio">
+              <p>현) 이끔 기술이사, AI 개발 서비스 Think Code 운영</p>
+              <p>전) JYP엔터테인먼트, AI·업무 자동화 시스템 구축</p>
+              <p>전) RSQUARE, 데이터 엔지니어링·자동화 파이프라인 구축</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p class="ins-history-label">강의 및 활동 이력</p>
+              <ul>
+                <li>AI·데이터·백엔드 실전 교육 강사</li>
+                <li>LLM·자동화·MSA·데이터 분석 등 다수 강의 경험</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="1">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="멘토 정기수" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">정기수</p>
+              <p class="ins-role">AI 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 AI 부문장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="2">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="PO 멘토" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김티어</p>
+              <p class="ins-role">PO 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 PO 부문장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="3">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="개발 멘토" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김티어</p>
+              <p class="ins-role">개발 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 개발 팀장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="4">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="디자인 멘토" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김티어</p>
+              <p class="ins-role">디자인 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 디자인 팀장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="5">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="마케팅 멘토" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김티어</p>
+              <p class="ins-role">마케팅 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 마케팅 파트장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="ins-card" data-index="6">
+          <div class="ins-photo">
+            <img src="profile_avatar@2x.png" alt="HR 멘토" width="280" height="280" loading="lazy" decoding="async">
+          </div>
+          <div class="ins-content">
+            <div class="ins-name-row">
+              <p class="ins-name">김티어</p>
+              <p class="ins-role">HR 멘토</p>
+            </div>
+            <div class="ins-bio">
+              <p>원티드랩 HR 팀장</p>
+            </div>
+            <div class="ins-divider"></div>
+            <div class="ins-history">
+              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="ins-pager" role="tablist" aria-label="강사·멘토 선택">
+        <button class="ins-dot is-active" type="button" data-index="0" aria-label="1번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="1" aria-label="2번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="2" aria-label="3번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="3" aria-label="4번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="4" aria-label="5번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="5" aria-label="6번째 카드"></button>
+        <button class="ins-dot" type="button" data-index="6" aria-label="7번째 카드"></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="ax-section roadmap">
+    <header class="rm-head">
+      <p class="rm-eyebrow">취업을 목표로 설계한</p>
+      <h2 class="rm-title">16주 완성 로드맵</h2>
+    </header>
+
+    <div class="rm-body">
+      <div class="rm-progress">
+        <div class="rm-progress-bar" id="rmProgressBar"></div>
+      </div>
+
+      <div class="rm-tabs">
+        <div class="rm-steps" role="tablist" aria-label="단계 선택">
+          <button class="rm-step is-active" type="button" data-step="1" role="tab">
+            <p class="rm-step-label">1단계 · 1 – 2주차</p>
+            <p class="rm-step-title">직무훈련</p>
+          </button>
+          <button class="rm-step" type="button" data-step="2" role="tab">
+            <p class="rm-step-label">2단계 · 3 – 8주차</p>
+            <p class="rm-step-title">AI 교육</p>
+          </button>
+          <button class="rm-step" type="button" data-step="3" role="tab">
+            <p class="rm-step-label">3단계 · 9주차</p>
+            <p class="rm-step-title">AI 실전 적용</p>
+          </button>
+          <button class="rm-step" type="button" data-step="4" role="tab">
+            <p class="rm-step-label">4단계 · 10 – 15주차</p>
+            <p class="rm-step-title">직군 맞춤 AI 포트폴리오 제작 · 발표</p>
+          </button>
+          <button class="rm-step" type="button" data-step="5" role="tab">
+            <p class="rm-step-label">5단계 · 16주차</p>
+            <p class="rm-step-title">취업 지원</p>
+          </button>
+        </div>
+
+        <div class="rm-detail" role="tabpanel">
+          <div class="rm-detail-head">
+            <p class="rm-detail-label" id="rmStepLabel">1단계 · 1 – 2주차</p>
+            <h3 class="rm-detail-title" id="rmStepTitle">직무훈련</h3>
+          </div>
+          <div class="rm-detail-row">
+            <p class="rm-detail-row-label">내용</p>
+            <p class="rm-detail-row-content" id="rmStepContent">내 직군에서 AI를 어떻게 써야 하는지 방향을 잡는 2주입니다. 원티드랩 현직자가 직접 들려주는 직군별 AI 활용 사례로 시작해 취업 장벽 진단과 희망 직군 탐색까지 함께 진행합니다.</p>
+          </div>
+          <div class="rm-detail-row">
+            <p class="rm-detail-row-label">산출물</p>
+            <ul class="rm-detail-row-list" id="rmStepOutputs">
+              <li>취업 장벽 진단서</li>
+              <li>직군별 AI 유즈케이스</li>
+              <li>AI 도구 체인 초안</li>
+            </ul>
+          </div>
+          <div class="rm-detail-row" id="rmStepExamplesWrap" hidden>
+            <p class="rm-detail-row-label">예시</p>
+            <div class="rm-examples" id="rmStepExamples"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ax-section tools">
+    <h2 class="tools-title">주요 사용 툴</h2>
+    <div class="tools-grid">
+      <article class="tool-card">
+        <div class="tool-logo logo-claude">
+          <img src="logo_claude.svg" alt="Claude 로고" loading="lazy" decoding="async">
+        </div>
+        <div class="tool-body">
+          <h3 class="tool-name">Claude</h3>
+          <p class="tool-desc">프롬프트 설계·문서 작성·포트폴리오 보완까지<br>16주 내내 가장 많이 쓰게 될 핵심 AI 도구입니다.</p>
+        </div>
+      </article>
+
+      <article class="tool-card">
+        <div class="tool-logo logo-ennoia" aria-label="ennoia">
+          <img src="logo_ennoia_1.svg" alt="" loading="lazy" decoding="async" style="top:28.77%;left:0;right:82.95%;bottom:0;">
+          <img src="logo_ennoia_2.svg" alt="" loading="lazy" decoding="async" style="top:28.77%;left:19.5%;right:64.94%;bottom:1.37%;">
+          <img src="logo_ennoia_3.svg" alt="" loading="lazy" decoding="async" style="top:28.77%;left:38.02%;right:46.41%;bottom:1.37%;">
+          <img src="logo_ennoia_4.svg" alt="" loading="lazy" decoding="async" style="top:28.77%;left:56.02%;right:26.22%;bottom:0;">
+          <img src="logo_ennoia_5.svg" alt="" loading="lazy" decoding="async" style="top:0;left:75.87%;right:19.53%;bottom:1.37%;">
+          <img src="logo_ennoia_6.svg" alt="" loading="lazy" decoding="async" style="top:28.77%;left:82.38%;right:0;bottom:0;">
+        </div>
+        <div class="tool-body">
+          <h3 class="tool-name">Ennoia</h3>
+          <p class="tool-desc">원티드랩이 만든 AI 에이전트 플랫폼입니다.<br>온프레미스 기반으로 민감한 데이터를 안전하게 관리하며 사내 데이터를 학습한 나만의 AI 에이전트를 직접 구축할 수 있습니다.</p>
+        </div>
+      </article>
+
+      <article class="tool-card">
+        <div class="tool-logo logo-claude">
+          <img src="logo_claude.svg" alt="Think Code 로고" loading="lazy" decoding="async">
+        </div>
+        <div class="tool-body">
+          <h3 class="tool-name">Think Code</h3>
+          <p class="tool-desc">환경 설치 없이 브라우저 하나로 강사와 같은 코드 위에서 실시간으로 코딩 수업에 참여할 수 있는 협업 플랫폼입니다. AI 코드 피드백으로 수업 외 시간에도 혼자 학습할 수 있습니다.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ax-section why">
+    <div class="why-head">
+      <h2 class="why-title">왜 프론티어즈인가요?</h2>
+      <div class="why-body">
+        <p>AI 교육은 많습니다. 하지만 끝까지 완성시키는 과정은 많지 않습니다. 프론티어즈는 단순히 AI를 배우는 교육이 아닙니다.</p>
+        <p>16주 동안 현직자 멘토링과 프로젝트 수행을 통해 실무 수준의 포트폴리오를 완성하고, 취업 준비까지 이어질 수 있도록 설계했습니다.</p>
+      </div>
+    </div>
+    <div class="why-grid">
+      <article class="why-card">
+        <div class="why-card-head">
+          <p class="why-card-label">연 300명+</p>
+          <h3 class="why-card-title">AI 인재 양성</h3>
+        </div>
+        <p class="why-card-desc">고용노동부 K-Digital Training 공식 훈련기관으로 매년 300명 이상의 IT·AI 인재를 양성하고 있습니다.</p>
+      </article>
+      <article class="why-card">
+        <div class="why-card-head">
+          <p class="why-card-label">완주율 88%</p>
+          <h3 class="why-card-title">교육 만족도 4.7 / 5</h3>
+        </div>
+        <p class="why-card-desc">끝까지 완주할 수 있도록 설계된 커리큘럼과 운영 경험을 보유하고 있습니다.</p>
+      </article>
+      <article class="why-card">
+        <div class="why-card-head">
+          <p class="why-card-label">취업 지원</p>
+          <h3 class="why-card-title">AI 교육 취업률 80%</h3>
+        </div>
+        <p class="why-card-desc">배움에서 끝나지 않고 실제 취업까지 이어질 수 있도록 지원합니다.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ax-section apply">
+    <h2 class="apply-title">지원 전 꼭 확인하세요</h2>
+    <div class="apply-grid">
+      <article class="apply-card">
+        <div class="apply-block">
+          <p class="apply-block-title">참가 자격</p>
+          <p class="apply-block-lead">아래 조건을 모두 충족하는 분만 지원 가능합니다.</p>
+          <ul class="apply-criteria">
+            <li>만 34세 이하 청년</li>
+            <li>최근 1년간 고용보험 미가입자 → 최종 합격자에 한해 증빙 서류 제출 필수</li>
+            <li>1년 이상 구직 활동 중인 미취업자</li>
+            <li>PO, 개발, 디자인, 마케팅, HR 직군을 희망하는 분</li>
+          </ul>
+        </div>
+        <div class="apply-block">
+          <p class="apply-block-title">교육 안내</p>
+          <dl class="apply-info">
+            <div class="apply-info-row">
+              <dt>기간</dt>
+              <dd>2026. 7. 13(월) / 4개월</dd>
+            </div>
+            <div class="apply-info-row">
+              <dt>장소</dt>
+              <dd>서울시 송파구 백제고분로 37길 22, 원티드그라운드<br>(8·9호선 석촌역 4분거리)</dd>
+            </div>
+            <div class="apply-info-row">
+              <dt>시간</dt>
+              <dd>평일 오전 10시 ~ 오후 7시<br>※ 멘토링 일정에 따라 일부 변경될 수 있습니다.</dd>
+            </div>
+            <div class="apply-info-row">
+              <dt>정원</dt>
+              <dd>35명 한정</dd>
+            </div>
+          </dl>
+        </div>
+      </article>
+
+      <article class="apply-card">
+        <div class="apply-block apply-block--steps">
+          <p class="apply-block-title">지원 절차</p>
+          <div class="apply-steps">
+            <div class="apply-step">
+              <p class="apply-step-no">STEP 1</p>
+              <div class="apply-step-content">
+                <p class="apply-step-name">온라인 지원</p>
+                <p class="apply-step-meta">~7월 10일(금) 13시까지</p>
+                <p class="apply-step-desc">하단 지원하기 버튼을 눌러 신청서를 제출해주세요.<br>정원 마감 시 조기 종료될 수 있습니다.</p>
+              </div>
+            </div>
+            <div class="apply-step">
+              <p class="apply-step-no">STEP 2</p>
+              <div class="apply-step-content">
+                <p class="apply-step-name">온라인 인터뷰</p>
+                <p class="apply-step-meta">Google Meet (약 30분)</p>
+                <p class="apply-step-desc">지원서 검토 후 개별 연락드립니다.<br>참여 의지와 직무 방향을 함께 확인합니다.</p>
+              </div>
+            </div>
+            <div class="apply-step">
+              <p class="apply-step-no">STEP 3</p>
+              <div class="apply-step-content">
+                <p class="apply-step-name">최종 합격 발표</p>
+                <p class="apply-step-desc">합격자에 한해 개별 안내드립니다.</p>
+              </div>
+            </div>
+            <div class="apply-step">
+              <p class="apply-step-no">STEP 4</p>
+              <div class="apply-step-content">
+                <p class="apply-step-name">교육 시작</p>
+                <p class="apply-step-desc">2026년 7월 13일(월) 개강</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ax-section faq">
+    <h2 class="faq-title">자주 묻는 질문 (FAQ)</h2>
+    <div class="faq-list">
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">어떤 사람에게 추천하는 프로그램인가요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>PO·개발·디자인·마케팅·HR 직무 취업을 희망하는 구직 청년에게 적합한 프로그램입니다.</p>
+          <p>특히 직무 교육이나 부트캠프를 수료했지만 아직 취업에 도달하지 못한 분, 실무 수준의 포트폴리오가 없어 막막한 분께 추천드립니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">부트캠프를 이미 수료했는데 또 참여해도 되나요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>프론티어즈는 직무 교육을 다시 제공하는 과정이 아닙니다.</p>
+          <p>이미 직무 학습을 마친 분들이 AI를 활용해 실무 수준의 포트폴리오를 완성하고 취업 경쟁력을 높일 수 있도록 설계된 과정입니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">참가 자격이 어떻게 되나요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>아래 조건을 모두 충족하셔야 합니다.</p>
+          <ul>
+            <li>만 34세 이하 청년</li>
+            <li>최근 1년간 고용보험 미가입자</li>
+            <li>1년 이상 구직 활동 중인 미취업자</li>
+          </ul>
+          <p>자격 증빙 서류는 합격 후 제출하시면 됩니다. 지원 단계에서는 본인 확인만으로 진행됩니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">참가비가 있나요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>수강료는 전액 무료이며 매월 출석률에 따라 최대 80만원 수당을 지급해드립니다.</p>
+          <p>또한 참가자에게는 노트북, AI 툴도 모두 무상으로 지원됩니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">풀타임으로 참여해야 하나요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>네, 월~금 오전 10시부터 오후 7시까지 풀타임으로 참여하셔야 합니다.</p>
+          <p>참여 의지가 확실한 분께 지원을 권장드립니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">AI나 프로그래밍을 전혀 몰라도 참여할 수 있나요?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>네, 가능합니다. 프론티어즈는 AI 툴 사용법부터 단계적으로 배우는 과정입니다.</p>
+          <p>개발 지식이나 AI 경험이 없어도 충분히 따라오실 수 있도록 설계되어 있습니다.</p>
+        </div>
+      </article>
+
+      <article class="faq-item">
+        <button class="faq-q" type="button" aria-expanded="false">
+          <span class="faq-q-text">더 궁금한 사항이 있다면?</span>
+          <span class="faq-chevron" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </button>
+        <div class="faq-a">
+          <p>아래 연락처로 문의 부탁드립니다.</p>
+          <ul>
+            <li>learning@wantedlab.com</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <script>
+    // iframe 임베드 자동 감지 — 부모 페이지(예: wanted) chrome이 위아래를 가리는 경우
+    // is-embedded 클래스가 붙으면 인트로 높이가 700px로 단축됨
+    if (window.self !== window.top) {
+      document.documentElement.classList.add('is-embedded');
+    }
+
+    /* ── 섹션 8 16주 로드맵 — 단계 클릭 시 상세 패널 + 진행 바 업데이트 ─── */
+    /* ── 섹션 12 FAQ 아코디언 — 클릭 시 펼치고/닫기 ─────────────── */
+    (function setupFaqAccordion() {
+      const items = document.querySelectorAll('.ax-section.faq .faq-item');
+      if (!items.length) return;
+
+      items.forEach(item => {
+        const btn = item.querySelector('.faq-q');
+        const ans = item.querySelector('.faq-a');
+        if (!btn || !ans) return;
+
+        btn.addEventListener('click', () => {
+          const open = !item.classList.contains('is-open');
+          if (open) {
+            item.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+            ans.style.maxHeight = ans.scrollHeight + 'px';
+          } else {
+            item.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+            ans.style.maxHeight = '0';
+          }
+        });
+      });
+
+      /* 뷰포트 리사이즈 시 열린 항목의 max-height 재계산 */
+      window.addEventListener('resize', () => {
+        items.forEach(item => {
+          if (item.classList.contains('is-open')) {
+            const ans = item.querySelector('.faq-a');
+            if (ans) ans.style.maxHeight = ans.scrollHeight + 'px';
+          }
+        });
+      });
+    })();
+
+    (function setupRoadmap() {
+      const ROADMAP_DATA = {
+        '1': {
+          label: '1단계 · 1 – 2주차',
+          title: '직무훈련',
+          content: '내 직군에서 AI를 어떻게 써야 하는지 방향을 잡는 2주입니다. 원티드랩 현직자가 직접 들려주는 직군별 AI 활용 사례로 시작해 취업 장벽 진단과 희망 직군 탐색까지 함께 진행합니다.',
+          outputs: ['취업 장벽 진단서', '직군별 AI 유즈케이스', 'AI 도구 체인 초안'],
+        },
+        '2': {
+          label: '2단계 · 3 – 8주차',
+          title: 'AI 교육',
+          content: 'AI 기초부터 실무 자동화까지 체화합니다. 프롬프트 설계, No-Code 자동화, AI 에이전트까지 6주 동안 단계적으로 쌓아올립니다. 배우는 것에 그치지 않고 실제로 돌아가는 자동화 시스템을 직접 완성합니다.',
+          outputs: ['맞춤형 AI 도구', '자동화 1호기', '프롬프트 라이브러리', '데이터 분석 리포트'],
+        },
+        '3': {
+          label: '3단계 · 9주차',
+          title: 'AI 실전 적용',
+          content: '배운 AI 도구를 실제 데이터에 적용합니다. 데이터 분석부터 시각화·인사이트 도출까지 AI로 직접 수행하며 포트폴리오 제작을 위한 실전 감각을 완성합니다.',
+          outputs: ['데이터 분석 리포트'],
+        },
+        '4': {
+          label: '4단계 · 10 – 15주차',
+          title: '직군 맞춤 AI 포트폴리오 제작 · 발표',
+          content: '현직자 멘토와 1:1로 매칭되어 내 직군에 맞는 실전 과제를 AI로 완성하고 최종 데모데이에서 발표합니다.',
+          outputs: ['직군별 AI 포트폴리오 완성본', '데모 영상'],
+          examples: [
+            { role: 'PO',     items: ['AI 기반 사용자 리서치 자동화', '데이터 기반 PRD 작성', '기능 우선순위 분석 에이전트'] },
+            { role: '개발',   items: ['AI 코드 어시스턴트 활용 서비스 프로토타입', 'API 자동화 시스템', '배포 파이프라인 구축'] },
+            { role: '디자인', items: ['AI 이미지 생성 파이프라인', 'UX 시안 자동화 워크플로우', 'AI 기반 디자인 시스템'] },
+            { role: '마케팅', items: ['AI 콘텐츠 제작·배포 파이프라인', '채널별 성과 분석 대시보드', 'SNS 자동화 운영 시스템'] },
+            { role: 'HR',     items: ['AI 기반 JD 자동 생성 시스템', '지원자 스크리닝 자동화 에이전트', '온보딩 자료 자동화'] },
+          ],
+        },
+        '5': {
+          label: '5단계 · 16주차',
+          title: '취업 지원',
+          content: '포트폴리오 완성으로 끝나지 않습니다. AI 이력서·자기소개서 클리닉, 직군별 맞춤 면접 코칭, 원티드 플랫폼 AI 구직 전략, 전담 커리어 코치 1:1 코칭까지 취업을 함께 완성합니다.',
+          outputs: ['AI 맞춤 이력서', '자기소개서', '면접 스크립트', '포지션 추천 리스트'],
+        },
+      };
+
+      const steps = document.querySelectorAll('.rm-step');
+      const progress = document.getElementById('rmProgressBar');
+      const labelEl = document.getElementById('rmStepLabel');
+      const titleEl = document.getElementById('rmStepTitle');
+      const contentEl = document.getElementById('rmStepContent');
+      const outputsEl = document.getElementById('rmStepOutputs');
+      const examplesWrap = document.getElementById('rmStepExamplesWrap');
+      const examplesEl = document.getElementById('rmStepExamples');
+      if (!steps.length || !progress) return;
+
+      function escapeHtml(s) {
+        return s.replace(/[&<>"']/g, ch => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[ch]));
+      }
+      function applyStep(stepKey) {
+        const data = ROADMAP_DATA[stepKey];
+        if (!data) return;
+        /* 좌측 탭 활성화 */
+        steps.forEach(s => s.classList.toggle('is-active', s.dataset.step === stepKey));
+        /* 진행 바 — 단계 N / 5 * 100% */
+        progress.style.width = (parseInt(stepKey, 10) * 20) + '%';
+        /* 우측 패널 */
+        labelEl.textContent = data.label;
+        titleEl.textContent = data.title;
+        contentEl.textContent = data.content;
+        outputsEl.innerHTML = data.outputs.map(o => `<li>${escapeHtml(o)}</li>`).join('');
+        if (data.examples) {
+          examplesWrap.hidden = false;
+          examplesEl.innerHTML = data.examples.map(ex => `
+            <div class="rm-example">
+              <p class="rm-example-role">${escapeHtml(ex.role)}</p>
+              <p class="rm-example-items">${ex.items.map(escapeHtml).join(' · ')}</p>
+            </div>
+          `).join('');
+        } else {
+          examplesWrap.hidden = true;
+          examplesEl.innerHTML = '';
+        }
+      }
+
+      steps.forEach(step => {
+        step.addEventListener('click', () => applyStep(step.dataset.step));
+      });
+      applyStep('1');
+    })();
+
+    /* ── 섹션 7 강사·멘토 캐러셀 — 슬라이드(좌우) + 드래그/스와이프 + 도트 ─── */
+    (function setupInstructorsCarousel() {
+      const root  = document.querySelector('.ax-section.instructors');
+      const track = document.querySelector('.ax-section.instructors .ins-track');
+      const cards = document.querySelectorAll('.ax-section.instructors .ins-card');
+      const dots  = document.querySelectorAll('.ax-section.instructors .ins-dot');
+      if (!track || !cards.length || !dots.length) return;
+
+      /* 카드 인덱스로 스크롤 */
+      function goTo(idx) {
+        const card = cards[idx];
+        if (!card) return;
+        track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+      }
+
+      /* 도트 클릭 → 해당 카드로 부드럽게 스크롤 (수동 조작 → 자동재생 일시중지) */
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', () => {
+          pauseAutoplay();
+          goTo(idx);
+        });
+      });
+
+      /* 가장 가까운 카드 인덱스 계산 (gap 고려해 offsetLeft 기준) */
+      function nearestIdx() {
+        const trackLeft = track.offsetLeft;
+        let best = 0;
+        let min = Infinity;
+        cards.forEach((c, i) => {
+          const dist = Math.abs(track.scrollLeft - (c.offsetLeft - trackLeft));
+          if (dist < min) { min = dist; best = i; }
+        });
+        return best;
+      }
+
+      /* 스크롤 위치 → 활성 도트 동기화 */
+      let scrollTick;
+      track.addEventListener('scroll', () => {
+        cancelAnimationFrame(scrollTick);
+        scrollTick = requestAnimationFrame(() => {
+          const idx = nearestIdx();
+          dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
+        });
+      }, { passive: true });
+
+      /* 마우스 드래그로 좌우 슬라이드 (터치는 overflow-x 가 네이티브로 처리) */
+      let isDown = false;
+      let startX = 0;
+      let startScroll = 0;
+      let moved = false;
+
+      track.addEventListener('mousedown', (e) => {
+        isDown = true;
+        moved = false;
+        startX = e.pageX;
+        startScroll = track.scrollLeft;
+        track.classList.add('is-grabbing');
+        pauseAutoplay();
+      });
+      window.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        const dx = e.pageX - startX;
+        if (Math.abs(dx) > 3) moved = true;
+        track.scrollLeft = startScroll - dx;
+      });
+      function endDrag() {
+        if (!isDown) return;
+        isDown = false;
+        track.classList.remove('is-grabbing');
+        if (moved) {
+          /* 가장 가까운 카드로 스냅 (gap 고려) */
+          const idx = nearestIdx();
+          track.scrollTo({ left: cards[idx].offsetLeft - track.offsetLeft, behavior: 'smooth' });
+        }
+      }
+      window.addEventListener('mouseup', endDrag);
+      window.addEventListener('mouseleave', endDrag);
+
+      /* 드래그 시 카드 내부 텍스트/이미지 클릭 막기 (클릭 vs 드래그 구분) */
+      track.addEventListener('click', (e) => {
+        if (moved) { e.preventDefault(); e.stopPropagation(); }
+      }, true);
+
+      /* ── 자동 재생: 5초마다 다음 카드, 마지막 → 처음 순환 ───────────── */
+      const AUTOPLAY_MS = 5000;
+      const RESUME_MS   = 8000;     /* 수동 조작 후 자동재생 재개 대기 */
+      let autoplayTimer = null;
+      let resumeTimer   = null;
+      let inView = true;            /* 섹션이 뷰포트에 있는지 */
+
+      function startAutoplay() {
+        stopAutoplay();
+        if (!inView) return;
+        autoplayTimer = setInterval(() => {
+          const cur  = nearestIdx();
+          const next = (cur + 1) % cards.length;
+          goTo(next);
+        }, AUTOPLAY_MS);
+      }
+      function stopAutoplay() {
+        if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+      }
+      function pauseAutoplay() {
+        stopAutoplay();
+        if (resumeTimer) clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(startAutoplay, RESUME_MS);
+      }
+
+      /* 호버 시 일시정지, 떠나면 재개 */
+      root.addEventListener('mouseenter', stopAutoplay);
+      root.addEventListener('mouseleave', startAutoplay);
+
+      /* 뷰포트에서 벗어나면 정지 (배터리/CPU 절약) */
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            inView = entry.isIntersecting;
+            if (inView) startAutoplay();
+            else stopAutoplay();
+          });
+        }, { threshold: 0.2 });
+        io.observe(root);
+      } else {
+        startAutoplay();
+      }
+    })();
+
+    /* ── 모바일: 글래스 프로스트 카드 스크롤 자동 focus ─────────
+       카드가 뷰포트 중앙 영역(상하 40% 잘라낸 중간 20% strip)에
+       진입하면 .is-focused 추가 → CSS hover 동등 효과 자동 적용 */
+    (function setupMobileCardFocus() {
+      if (!('IntersectionObserver' in window)) return;
+      if (!window.matchMedia('(max-width: 768px)').matches) return;
+
+      const cards = document.querySelectorAll(
+        '.solution-card, .outcome-card, .price-box, .instructor-card'
+      );
+      if (!cards.length) return;
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-focused');
+          } else {
+            entry.target.classList.remove('is-focused');
+          }
+        });
+      }, {
+        rootMargin: '-40% 0px -40% 0px',   /* 뷰포트 중앙 20% strip */
+        threshold: 0,
+      });
+
+      cards.forEach((card) => io.observe(card));
+    })();
+
+    /* ── 솔루션 리스트 — 호버 시 해당 항목 강조 (자동 사이클 제거) ─────────
+       기본: 첫 항목 강조(HTML 정적). hover 시 해당 항목 강조,
+       mouseleave 시 첫 항목으로 복귀 */
+    (function setupSolutionHover() {
+      const items = document.querySelectorAll('.solution-item');
+      if (!items.length) return;
+
+      function applyHighlight(idx) {
+        items.forEach((it, i) => it.classList.toggle('is-primary', i === idx));
+      }
+
+      items.forEach((item, idx) => {
+        item.addEventListener('mouseenter', () => applyHighlight(idx));
+      });
+
+      /* 컨테이너 외부로 마우스가 나가면 → 첫 항목으로 복귀 */
+      const list = document.querySelector('.solution-list');
+      if (list) {
+        list.addEventListener('mouseleave', () => applyHighlight(0));
+      }
+    })();
+
+    /* ── 섹션 2 진입 시마다 채팅 버블 순차 등장 모션 반복 ─────────────
+       위→아래 순서로 한 버블씩 scale + fade-in (spring overshoot)
+       섹션이 뷰포트를 벗어나면 hidden 상태로 reset, 재진입 시 다시 재생 */
+    (function setupProblemBubbles() {
+      const problemSection = document.querySelector('.ax-section.problem');
+      const rows = document.querySelectorAll('.problem-chat-row');
+      if (!problemSection || !rows.length) return;
+
+      const STAGGER = 700;       /* 버블 간 등장 간격(ms) */
+
+      /* reduced motion / IO 미지원 — 즉시 모두 표시 */
+      if (!('IntersectionObserver' in window)
+          || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        rows.forEach(r => r.classList.add('appeared'));
+        return;
+      }
+
+      const timers = [];
+      function clearTimers() {
+        timers.forEach(t => clearTimeout(t));
+        timers.length = 0;
+      }
+      function play() {
+        clearTimers();
+        /* 초기화 — 모두 hidden 으로 리셋 */
+        rows.forEach(r => r.classList.remove('appeared'));
+        /* reflow 강제 → 트랜지션이 새로 시작되도록 */
+        void rows[0].offsetHeight;
+        /* 순차 등장 */
+        rows.forEach((row, idx) => {
+          timers.push(setTimeout(() => row.classList.add('appeared'), idx * STAGGER));
+        });
+      }
+      function reset() {
+        clearTimers();
+        rows.forEach(r => r.classList.remove('appeared'));
+      }
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) play();
+          else reset();
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+
+      io.observe(problemSection);
+    })();
+
+    /* ── 스크롤 진입 시 fade-in 인터랙션 ─────────────────────
+       인트로 제외 모든 섹션의 직속 자식을 reveal 대상으로 등록 */
+    (function setupScrollReveal() {
+      if (!('IntersectionObserver' in window)) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const targets = [];
+      document.querySelectorAll('.ax-section:not(.intro)').forEach(section => {
+        section.querySelectorAll(':scope > *').forEach(el => targets.push(el));
+      });
+      // 이미 뷰포트 안에 있는 요소(최상단 섹션)는 즉시 visible 처리하지 않고,
+      // IntersectionObserver 첫 콜백에서 자연스럽게 처리되도록 둠.
+      targets.forEach(el => el.classList.add('reveal'));
+
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -8% 0px'   /* 살짝 일찍 트리거 */
+      });
+
+      targets.forEach(el => io.observe(el));
+    })();
+  </script>
+
+  <script type="module">
+    import * as THREE from 'https://esm.sh/three@0.166.0';
+    import { GLTFLoader } from 'https://esm.sh/three@0.166.0/examples/jsm/loaders/GLTFLoader';
+    import { RGBELoader } from 'https://esm.sh/three@0.166.0/examples/jsm/loaders/RGBELoader';
+
+    // ── Renderer (alpha: true → 캔버스 투명, 섹션 자체 배경이 보이도록) ──
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0);  // 투명 (intro 다크 bg가 캔버스 뒤로 비치도록)
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+    // ── Scene & Camera (카메라 고정 — 정면 뷰) ──────────────────────
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.1, 1000);
+
+
+    let RADIUS = 38;
+    let modelMaxDim = 0;
+    // 뷰포트 너비 따라 카메라 거리 자동 계산 — 키캡이 좌우 패딩을 침범하지 않도록
+    function calcRadius() {
+      if (!modelMaxDim) return RADIUS;
+      const aspect = innerWidth / innerHeight;
+      const tanHalfFov = Math.tan(camera.fov * Math.PI / 360);
+      const defaultRadius = modelMaxDim * 2.4;
+      // 좌우 패딩 (반응형) — 모바일은 좀 더 여유롭게
+      let sidePadPx = 190;
+      if (innerWidth <= 768) sidePadPx = 50;
+      else if (innerWidth <= 1280) sidePadPx = 80;
+      // 키캡이 차지할 수 있는 최대 화면 가로(px)
+      const maxKeycapPx = Math.max(innerWidth - sidePadPx * 2, 200);
+      // 해당 가로 안에 들어가도록 필요한 카메라 거리
+      // 회전(45°) + 마우스 follow 여유 → SAFETY 1.35 곱해 잘림 방지
+      const SAFETY = 1.35;
+      const requiredRadius = SAFETY * (modelMaxDim * innerWidth) / (maxKeycapPx * 2 * tanHalfFov * aspect);
+      return Math.max(defaultRadius, requiredRadius);
+    }
+    function placeCamera() {
+      // 정면 (z+) 에서 바라봄 — text plane이 항상 정면으로 보임
+      RADIUS = calcRadius();
+      camera.position.set(0, 0, RADIUS);
+      camera.lookAt(0, 0, 0);
+    }
+    placeCamera();
+
+    // ── Mouse-follow: 위치 + 회전이 함께 커서를 따라옴 ──────────────
+    const BASE_ROT_X = Math.PI / 4;   // 기본 위에서 45° 내려다보는 시점
+    const BASE_ROT_Y = Math.PI / 6;   // 살짝 비튼 3/4 뷰
+    const FOLLOW_X   = 0.20;          // 회전 진폭 위아래 (살짝만)
+    const FOLLOW_Y   = 0.30;          // 회전 진폭 좌우 (살짝만)
+
+    let mouseNX = 0, mouseNY = 0;     // 정규화된 마우스 -1..+1
+    let curRotX = BASE_ROT_X;
+    let curRotY = BASE_ROT_Y;
+
+    window.addEventListener('mousemove', e => {
+      mouseNX = (e.clientX / innerWidth  - 0.5) * 2;
+      mouseNY = (e.clientY / innerHeight - 0.5) * 2;
+    });
+
+    // 커서가 화면 밖으로 나가면 → 키캡 자동으로 중앙 복귀
+    function resetToCenter() { mouseNX = 0; mouseNY = 0; }
+    document.documentElement.addEventListener('mouseleave', resetToCenter);
+    document.addEventListener('mouseout', e => {
+      // 윈도우 자체를 벗어난 경우만 (다른 요소로 hover-out 한 게 아닌)
+      if (!e.relatedTarget && !e.toElement) resetToCenter();
+    });
+    window.addEventListener('blur', resetToCenter);   // 다른 창으로 포커스 이동
+
+    // ── 클릭 시 키캡 누르는 모션 + 텍스트 토글 (스크롤 효과 제거됨) ──
+    let pressYScale  = 1;     // 현재 Y 스케일
+    let pressYTarget = 1;     // 목표 Y 스케일
+    let pressTimer = null;
+
+    /* (hint 메시지 제거됨) */
+
+    // 다음 섹션으로 부드럽게 스크롤
+    function scrollToNextSection() {
+      const sections = Array.from(document.querySelectorAll('.ax-section'));
+      const scroll = window.scrollY;
+      const next = sections.find(s => s.offsetTop > scroll + 10);
+      if (next) {
+        window.scrollTo({ top: next.offsetTop, behavior: 'smooth' });
+      }
+    }
+
+    /* 단일 클릭 → 키캡 누름 + 텍스트 스왑 (스크롤 다운 없음)
+       - 인터랙티브 엘리먼트(버튼·탭·아코디언 등)는 자체 동작 보장
+       - 클릭과 동시에 자동 루프(autoPressAndSwap) 호출 */
+    window.addEventListener('mousedown', (e) => {
+      // 좌클릭만 처리 — 우클릭/휠클릭은 무시
+      if (e.button !== 0) return;
+
+      const target = e.target;
+      if (target && target.closest) {
+        if (target.closest('button, a, input, textarea, select, label, [role="tab"], [role="button"], .step-head, .tab-item')) {
+          return;
+        }
+      }
+
+      // 클릭 → 키캡 누름 + 텍스트 스왑 (자동 루프와 동일한 인터랙션)
+      autoPressAndSwap();
+    });
+
+    // ── 조명 (HDRI 로드 전 폴백) ───────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
+    keyLight.position.set(5, 10, 7);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0xaaccff, 0.9);
+    rimLight.position.set(-6, 4, -8);
+    scene.add(rimLight);
+
+    /* ── 키캡 transmission용 backdrop 플레인 ──────────────────────────
+       3D 씬에 큰 다크 플레인을 배치하여, 키캡의 transmission이
+       항상 깔끔한 배경색을 샘플링하도록 함 (내부 stem 등의 노이즈 제거).
+       스크롤에 따라 컬러가 dark→white로 fade되어:
+        · 인트로(다크 bg): backdrop dark → 키캡이 다크 bg에 자연스럽게 융화
+        · 그 외 섹션(흰 body bg): backdrop white → 키캡이 흰 bg에 자연스럽게 융화 */
+    const introBackdrop = new THREE.Mesh(
+      new THREE.PlaneGeometry(500, 500),
+      new THREE.MeshBasicMaterial({
+        color: 0x14191e,
+        toneMapped: false,
+        depthWrite: false,
+      })
+    );
+    introBackdrop.position.z = -40;       /* text plane(-25)보다 뒤, transmission 샘플링용 */
+    introBackdrop.renderOrder = -3;       /* text plane(-1)보다 먼저 렌더 */
+    scene.add(introBackdrop);
+    const BACKDROP_DARK = new THREE.Color(0x14191e);
+    const BACKDROP_LIGHT = new THREE.Color(0xffffff);
+
+    // ── 다방향 보조 라이트 — 키캡 곡면에 여러 highlight 생성 ─────────
+    // 인트로와 동일한 흰색 라이트 (dispersion이 자연 분리해서 무지개 만듦)
+    const lightLeft = new THREE.DirectionalLight(0xffffff, 0.8);
+    lightLeft.position.set(-10, 0, 4);
+    scene.add(lightLeft);
+
+    const lightRight = new THREE.DirectionalLight(0xffffff, 0.8);
+    lightRight.position.set(10, 0, 4);
+    scene.add(lightRight);
+
+    const lightBottom = new THREE.DirectionalLight(0xffffff, 0.6);
+    lightBottom.position.set(0, -8, 5);
+    scene.add(lightBottom);
+
+    const lightFront = new THREE.PointLight(0xffffff, 1.2, 40);
+    lightFront.position.set(0, 2, 12);
+    scene.add(lightFront);
+
+    // ── HDRI (반사·굴절용) ─────────────────────────────────────────
+    //    초기 렌더에 필수 아님 → idle 시점에 로드해 첫 페인트 차단하지 않음
+    function loadHDRI() {
+      new RGBELoader().load(
+        'https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/studio_small_09_1k.hdr',
+        hdr => {
+          hdr.mapping = THREE.EquirectangularReflectionMapping;
+          scene.environment = hdr;
+        }
+      );
+    }
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadHDRI, { timeout: 1500 });
+    } else {
+      setTimeout(loadHDRI, 600);
+    }
+
+    // ── 배경 텍스트: 사전 생성된 SVG 아웃라인 사용 (font metrics 의존 제거) ──
+    const TEXT_STATES = ['AI NATIVE', 'FRONTIERS'];
+    const TEXT_FILES = {
+      'AI NATIVE': 'text_ai_native.svg',
+      'FRONTIERS': 'text_frontiers.svg',
+    };
+    /* Figma viewBox 기준 비율 유지 — 캔버스 해상도는 4× 업스케일 (텍스처 품질 확보) */
+    const TEXT_DIMS = {
+      'AI NATIVE': { w: 2435, h: 413 },   /* 608.734 × 103.314 × 4 */
+      'FRONTIERS': { w: 2618, h: 382 },   /* 654.574 × 95.5844 × 4 */
+    };
+    const textCanvases = {};
+    const textTextures = {};
+
+    TEXT_STATES.forEach(name => {
+      const dim = TEXT_DIMS[name];
+      const cnv = document.createElement('canvas');
+      cnv.width  = dim.w;
+      cnv.height = dim.h;
+      const c = cnv.getContext('2d');
+      c.fillStyle = '#14191e';
+      c.fillRect(0, 0, dim.w, dim.h);
+      textCanvases[name] = cnv;
+
+      const tex = new THREE.CanvasTexture(cnv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.minFilter  = THREE.LinearMipMapLinearFilter;
+      tex.magFilter  = THREE.LinearFilter;
+      tex.anisotropy = 16;
+      textTextures[name] = tex;
+
+      const img = new Image();
+      img.onload = () => {
+        c.drawImage(img, 0, 0, dim.w, dim.h);
+        tex.needsUpdate = true;
+      };
+      img.src = TEXT_FILES[name];
+    });
+
+    let textState = 0;
+    let textPlaneAspect = TEXT_DIMS[TEXT_STATES[0]].w / TEXT_DIMS[TEXT_STATES[0]].h;
+
+    const textPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({
+        map: textTextures[TEXT_STATES[textState]],
+        toneMapped: false,
+        /* transparent: false 유지 — 키캡 transmission이 opaque 패스 샘플링 가능하도록 */
+      })
+    );
+    textPlane.position.set(0, 0, -25);
+    textPlane.renderOrder = -1;
+    scene.add(textPlane);
+
+    function setBackgroundText(text) {
+      const dim = TEXT_DIMS[text];
+      textPlaneAspect = dim.w / dim.h;
+      textPlane.material.map = textTextures[text];
+      textPlane.material.needsUpdate = true;
+      resizeTextPlane();
+    }
+
+    /* ── MARKETING ↔ FRONTIERS 자동 스왑 애니메이션 ─────────────
+       슬라이드 업 → 텍스처 교체 → 슬라이드 업 (텍스트가 카메라 뷰 위로 사라졌다 아래에서 올라옴)
+       — opacity 페이드 대신 슬라이드만 사용 (transparent: true는 키캡 transmission 깨뜨림) */
+    let textSwapAnimating = false;
+    function animateTextSwap() {
+      if (textSwapAnimating) return;
+      textSwapAnimating = true;
+
+      const newIdx = (textState + 1) % TEXT_STATES.length;
+      const newName = TEXT_STATES[newIdx];
+      const baseY = textPlane.position.y;
+      const delay = 40;             // ms — 키캡 누름 직후 약간 늦게 시작
+      const dur = 260;              // ms — 슬라이드 인 지속 시간 (40 ~ 300ms)
+      const slideY = 2;             // 슬라이드 거리 (월드 유닛)
+
+      /* easeOutBack — 도착 직전 오버슛해서 쫄깃한 텐션감 부여 (c1 증가 → 오버슛 폭 확장) */
+      function easeOutBack(t) {
+        const c1 = 3.5;
+        const c3 = c1 + 1;
+        return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+      }
+
+      /* 10ms 지연 후 텍스처 교체 + 슬라이드 시작 */
+      setTimeout(() => {
+        setBackgroundText(newName);
+        textState = newIdx;
+        textPlane.position.y = baseY + slideY;
+
+        const startTime = performance.now();
+        function step() {
+          const elapsed = performance.now() - startTime;
+          if (elapsed < dur) {
+            /* 위에서 아래로 슬라이드 인 + 텐션감 오버슛 */
+            const t = elapsed / dur;
+            const eased = easeOutBack(t);
+            textPlane.position.y = (baseY + slideY) - eased * slideY;
+            requestAnimationFrame(step);
+            return;
+          }
+          textPlane.position.y = baseY;
+          textSwapAnimating = false;
+        }
+        step();
+      }, delay);
+    }
+
+    /* ── 자동 루프: 키캡 누름 모션 + 텍스트 스왑 동시 발동 ─────────
+       - 둥둥 뜨는 모션 대체용
+       - press: scale.y 0.85까지 압축 후 1로 복귀 (전역 pressYTarget 사용)
+       - 동시에 background 텍스트 MARKETING ↔ FRONTIERS 슬라이드 */
+    function autoPressAndSwap() {
+      /* 키캡 누름 모션 — 외부 click 핸들러와 동일한 변수 사용 */
+      pressYTarget = 0.85;
+      if (pressTimer) clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => { pressYTarget = 1; }, 140);
+
+      /* 동시에 텍스트 스왑 모션 */
+      animateTextSwap();
+    }
+
+    /* 마우스 움직임 감지 — 움직이는 동안 자동 루프 일시정지 (1초간 정지 시 재개) */
+    let lastMouseActivity = 0;
+    const AUTO_IDLE_THRESHOLD = 1000;   // ms
+    window.addEventListener('mousemove', () => {
+      lastMouseActivity = performance.now();
+    }, { passive: true });
+
+    /* 페이지 로드 2초 후 시작, 매 3.5초마다 자동 클릭 + 텍스트 스왑
+       조건: (1) 인트로 섹션 안에 있을 때만, (2) 최근 마우스 움직임 없을 때 */
+    setTimeout(() => {
+      autoPressAndSwap();
+      setInterval(() => {
+        const atIntro = window.scrollY < window.innerHeight * 0.5;
+        const mouseIdle = performance.now() - lastMouseActivity > AUTO_IDLE_THRESHOLD;
+        if (atIntro && mouseIdle) {
+          autoPressAndSwap();
+        }
+      }, 3500);
+    }, 2000);
+
+    function getSidePadPx() {
+      if (innerWidth <= 768)  return 32;
+      if (innerWidth <= 1280) return 80;
+      return 190;
+    }
+    /* ── 텍스트 plane 사이징: 글리프 높이를 MARKETING 기준으로 통일 ─────
+       모든 텍스트(AI NATIVE, CAREER CAMP)가 동일한 글리프 높이로 보이도록
+       plane HEIGHT를 기준값으로 고정하고, plane WIDTH = HEIGHT * canvas_aspect 로 산출
+       → 글리프 비율은 보존 / 가로가 긴 텍스트(CAREER CAMP)는 뷰포트 양옆으로 overflow */
+    const REFERENCE_CANVAS_ASPECT = 3236 / 600;   /* 옛 MARKETING canvas aspect 5.393 */
+    const REFERENCE_TEXT_RATIO = 0.73;            /* 옛 MARKETING 캔버스 내 text_h/canvas_h */
+    const NEW_TEXT_RATIO = 1.0;                   /* 새 SVG: glyph가 viewBox 가득 채움 */
+    function resizeTextPlane() {
+      const distFromCam = camera.position.z - textPlane.position.z;
+      const visH = 2 * distFromCam * Math.tan(camera.fov * Math.PI / 360);
+      const visW = visH * camera.aspect;
+      const PAD_PX = getSidePadPx();
+      const planeScreenW = Math.max(innerWidth - PAD_PX * 2, 100);
+      /* 기준 plane H: MARKETING aspect로 viewport-fit 했을 때의 높이 */
+      const planeWorldW_reference = visW * planeScreenW / innerWidth;
+      const planeWorldH_reference = planeWorldW_reference / REFERENCE_CANVAS_ASPECT;
+      /* tight-to-glyph SVG는 패딩이 없으므로 plane H를 줄여서 MARKETING 글리프 높이에 맞춤 */
+      const planeWorldH = planeWorldH_reference * (REFERENCE_TEXT_RATIO / NEW_TEXT_RATIO);
+      /* plane W = H * canvas aspect (글리프 비율 유지, 텍스트가 길면 뷰포트 너머로 확장) */
+      const planeWorldW = planeWorldH * textPlaneAspect;
+      textPlane.scale.set(planeWorldW, planeWorldH, 1);
+    }
+    resizeTextPlane();
+
+    // ── Dispersion source: 키캡 뒤 작은 white plane ────────────────
+    //    pivot의 자식으로 추가 → 키캡 회전에 맞춰 따라다님 → 항상 silhouette 뒤에 숨김
+    //    키캡 transmission이 이 plane을 sampling하며 dispersion으로 굴절시켜
+    //    가장자리에 prismatic spectrum (rainbow stripes) 생성
+    const dispSource = new THREE.Mesh(
+      new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        toneMapped: false,
+        depthWrite: false,
+      })
+    );
+    dispSource.renderOrder = -3;   // 키캡보다 먼저 렌더 (back render target에 들어감)
+    dispSource.visible = false;    // 초기엔 인트로 → 안 보임. scroll에서 토글
+    // scene.add(...) 안 함 — GLB 로드 시 pivot에 자식으로 추가
+
+    // ── Load GLB + 머티리얼 dispersion/attenuation 강화 ─────────────
+    let model = null;
+    let modelBaseY = 0;
+    let keycapMaterial = null;
+
+    new GLTFLoader().load('keycap_ax.glb', gltf => {
+      const obj = gltf.scene;
+
+      /* ── 메시 분리: GLB 안에 transmission 메시가 여러 개 있으면
+         가장 큰 것(=외부 셸)만 남기고 나머지(=내부 스템 등)는 숨김 ──
+         → 다크 배경에서 내부 스템이 비치는 문제 해결 */
+      const transMeshes = [];
+      const nonTransMeshes = [];
+      obj.traverse(child => {
+        if (!child.isMesh || !child.material) return;
+        if (child.material.transmission > 0) transMeshes.push(child);
+        else nonTransMeshes.push(child);
+      });
+
+      /* GLB에 들어있던 비-transmission 메시(예: AX 라벨)는 별도 plane으로 대체하므로 숨김 */
+      nonTransMeshes.forEach(m => { m.visible = false; });
+
+      /* 가장 큰 부피의 transmission 메시 = 외부 셸 */
+      let keycapMesh = null;
+      let maxVolume = 0;
+      transMeshes.forEach(m => {
+        const bbox = new THREE.Box3().setFromObject(m);
+        const sz = bbox.getSize(new THREE.Vector3());
+        const vol = sz.x * sz.y * sz.z;
+        if (vol > maxVolume) { maxVolume = vol; keycapMesh = m; }
+      });
+
+      /* 셸이 아닌 transmission 메시(내부 스템 등)는 숨김 */
+      transMeshes.forEach(m => {
+        if (m !== keycapMesh) m.visible = false;
+      });
+
+      /* 셸 머티리얼 설정 */
+      if (keycapMesh) {
+        const m = keycapMesh.material;
+        m.transmission = 1.0;
+        m.roughness = 0.03;
+        m.ior = 1.55;
+        m.thickness = 6.0;
+        m.attenuationColor = new THREE.Color(1.0, 0.95, 0.92);
+        m.attenuationDistance = 15;
+        m.dispersion = 5.0;
+        m.clearcoat = 1.0;
+        m.clearcoatRoughness = 0.0;
+        m.transparent = true;
+        m.side = THREE.FrontSide;
+
+        keycapMaterial = m;   // scroll handler에서 참조
+
+        // ── Dispersion 강제 증폭만 유지 (자연스러운 글래스 굴절 색분리) ──
+        m.onBeforeCompile = (shader) => {
+          shader.fragmentShader = shader.fragmentShader.replace(
+            /float halfSpread\s*=\s*\(\s*ior\s*-\s*1\.0\s*\)\s*\*\s*0\.025\s*\*\s*dispersion\s*;/,
+            'float halfSpread = ( ior - 1.0 ) * 0.25 * dispersion;'
+          );
+        };
+        m.needsUpdate = true;
+      }
+
+      // 키캡 메시 bbox + 사이즈 산정
+      const keyBox    = new THREE.Box3().setFromObject(keycapMesh || obj);
+      const keyCenter = keyBox.getCenter(new THREE.Vector3());
+      const fullBox   = new THREE.Box3().setFromObject(obj);
+      const fullSize  = fullBox.getSize(new THREE.Vector3());
+      const maxDim    = Math.max(fullSize.x, fullSize.y, fullSize.z);
+
+      // ── 아이콘 라벨: SVG → Canvas → Plane (키캡 윗면 우하단) ──
+      const keycapW   = fullSize.x;
+      const labelSize = keycapW * 0.13;
+
+      const iconImg = new Image();
+      iconImg.onload = () => {
+        const cnv = document.createElement('canvas');
+        cnv.width = 512; cnv.height = 512;
+        const ctx2 = cnv.getContext('2d');
+        ctx2.clearRect(0, 0, 512, 512);
+        ctx2.drawImage(iconImg, 0, 0, 512, 512);
+
+        const iconTex = new THREE.CanvasTexture(cnv);
+        iconTex.colorSpace = THREE.SRGBColorSpace;
+        iconTex.minFilter = THREE.LinearMipMapLinearFilter;
+        iconTex.magFilter = THREE.LinearFilter;
+        iconTex.anisotropy = 16;
+
+        const label = new THREE.Mesh(
+          new THREE.PlaneGeometry(labelSize, labelSize),
+          new THREE.MeshBasicMaterial({
+            map: iconTex,
+            transparent: true,
+            alphaTest: 0.05,
+            depthTest: false,           // 항상 보임
+            depthWrite: false,
+            toneMapped: false,
+          })
+        );
+        label.renderOrder = 9999;
+
+        // 키캡 윗면 우측 하단 (월드 좌표는 keyBox 기준)
+        label.position.set(
+          keyBox.max.x - keycapW * 0.30,        // 우측 (가장자리에서 30% 안쪽)
+          keyBox.max.y,                          // 윗면
+          keyBox.max.z - fullSize.z * 0.30      // 화면 하단 (camera 쪽)
+        );
+        label.rotation.x = -Math.PI / 2;        // 윗면에 눕힘
+
+        obj.add(label);                          // pivot 회전 따라옴
+      };
+      iconImg.onerror = (e) => console.error('SVG 로드 실패:', e);
+      iconImg.src = 'icon_enter.svg';
+
+      if (keycapMesh) keycapMesh.material.depthWrite = true;
+
+      // ── Pivot 구조: 회전축을 키캡 중앙으로 ───────────────────────
+      // pivot은 화면 중앙에 위치 → pivot 회전 = 키캡 중앙 기준 회전
+      const pivot = new THREE.Group();
+      pivot.add(obj);
+      obj.position.copy(keyCenter).multiplyScalar(-1);  // 키캡 중심을 pivot 원점에
+
+      pivot.position.y = maxDim * 0.08;   // 살짝 위로 올려 시각적 균형
+      pivot.scale.setScalar(0.9);         // 키캡 90% 축소
+
+      scene.add(pivot);
+      model = pivot;
+      modelBaseY = pivot.position.y;
+      RADIUS = maxDim * 2.4;
+      modelMaxDim = maxDim;
+      placeCamera();
+      resizeTextPlane();
+      updateEmbedShift();   // 카메라 위치 확정 후 임베드 shift 재계산
+
+      // dispSource를 pivot의 자식 + 키캡 밑면에 가로로 붙임
+      // 어떤 회전 각도에서도 키캡 본체가 가려서 카메라엔 안 보이고,
+      // 키캡 transmission이 sampling해서 dispersion만 가장자리에 spectrum 생성
+      pivot.add(dispSource);
+      dispSource.rotation.x = -Math.PI / 2;          // 가로로 눕힘 (위쪽 면)
+      dispSource.position.set(0, -maxDim * 0.4, 0);  // 키캡 밑면 위치
+      dispSource.scale.set(maxDim * 0.5, maxDim * 0.5, 1);
+    });
+
+    // 키캡 + MARKETING/FRONTIERS 텍스트가 헤더와 푸터 사이 중앙에 위치하도록 shift 계산
+    //   header bottom edge ↔ footer top edge 의 정확한 중앙으로 정렬
+    let embedShiftY = 0;
+    function updateEmbedShift() {
+      const header = document.querySelector('.ax-header');
+      const footer = document.querySelector('.ax-footer');
+      let shiftPx = 0;
+      if (header && footer) {
+        const headerBottom = header.offsetTop + header.offsetHeight;
+        const footerTop = footer.offsetTop;
+        const desiredCenter = (headerBottom + footerTop) / 2;
+        shiftPx = desiredCenter - innerHeight / 2;   // 양수 = 아래로 이동
+      }
+      const visH = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360);
+      // 화면 Y는 아래가 양수, 월드 Y는 위가 양수 → 부호 반전
+      embedShiftY = -shiftPx * (visH / innerHeight);
+      textPlane.position.y = embedShiftY;
+    }
+    updateEmbedShift();
+
+    // ── Render Loop ──────────────────────────────────────────────────
+    (function tick() {
+      requestAnimationFrame(tick);
+
+      if (model) {
+        const t = performance.now() * 0.001;
+
+        // 모바일에서는 마우스 추적 비활성화 — 둥둥 뜨는 모션만 유지
+        const isMobile = innerWidth <= 768;
+        const followNX = isMobile ? 0 : mouseNX;
+        const followNY = isMobile ? 0 : mouseNY;
+
+        // ── 회전: 마우스 방향으로 살짝 향함 ──
+        const targetRotX = BASE_ROT_X + followNY * FOLLOW_X;
+        const targetRotY = BASE_ROT_Y + followNX * FOLLOW_Y;
+        curRotX += (targetRotX - curRotX) * 0.06;
+        curRotY += (targetRotY - curRotY) * 0.06;
+        model.rotation.x = curRotX;
+        model.rotation.y = curRotY;
+
+        // ── 위치: 키캡 전체가 커서를 따라 이동 (메인 인터랙션) ──
+        const visH = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360);
+        const visW = visH * camera.aspect;
+        const FOLLOW_POS_X = 0.40;   // 화면 너비의 ±40%까지 따라옴
+        const FOLLOW_POS_Y = 0.35;   // 화면 높이의 ±35%까지 따라옴
+        // 살짝 둥둥 뜨는 모션 — 부드러운 sin 파동 (자동 press/text-swap과 공존)
+        const floatY = Math.sin(t * 1.2) * visH * 0.015;   // 진폭 ≈ 1.5% of viewport, 주기 ≈ 5.2s
+        const targetPosX =  followNX * visW * FOLLOW_POS_X;
+        const targetPosY = -followNY * visH * FOLLOW_POS_Y + modelBaseY + embedShiftY + floatY;
+
+        // 더 빠른 추적 (damping 0.05 → 0.10)
+        model.position.x += (targetPosX - model.position.x) * 0.10;
+        model.position.y += (targetPosY - model.position.y) * 0.10;
+
+        // ── 클릭 시 키캡 누르는 모션: Y 스케일 보간 ──
+        pressYScale += (pressYTarget - pressYScale) * 0.30;
+        // pivot 안의 obj(키캡 데이터)에 적용 → 키캡 local Y 방향으로 압축
+        if (model.children[0]) model.children[0].scale.y = pressYScale;
+      }
+
+      renderer.render(scene, camera);
+    })();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      placeCamera();        // 뷰포트 너비 변경 시 키캡 사이즈 자동 조정
+      resizeTextPlane();
+      updateEmbedShift();   // 뷰포트 변경 시 임베드 shift 재계산
+    });
+
+    // 캔버스는 투명 — 인트로의 다크 bg / 다른 섹션의 white body bg가 그대로 비침
+    renderer.setClearColor(0x000000, 0);
+    if (dispSource) dispSource.visible = false;
+    textPlane.visible = true;
+    const canvasEl = renderer.domElement;
+    function updateOnScroll() {
+      const intro = window.innerHeight;
+      const scroll = window.scrollY;
+      const curriculumEl = document.querySelector('.ax-section.curriculum');
+      const problemEl = document.querySelector('.ax-section.problem');
+
+      /* 캔버스 blur 효과 제거 — 키캡은 스크롤과 무관하게 항상 선명하게 유지 */
+      let backdropT = 0;   /* 0 = dark, 1 = light */
+      if (problemEl) {
+        /* backdrop: intro + problem 섹션 내내 dark 유지.
+           problem 끝나고 signal 섹션 진입 직전부터 white로 전환 → signal 이후 white body 매칭 */
+        const problemBottom = problemEl.offsetTop + problemEl.offsetHeight;
+        const backdropFadeStart = problemBottom;
+        const backdropFadeEnd = problemBottom + 200;
+        if (scroll < backdropFadeStart) backdropT = 0;
+        else if (scroll < backdropFadeEnd) backdropT = (scroll - backdropFadeStart) / (backdropFadeEnd - backdropFadeStart);
+        else backdropT = 1;
+      }
+      /* backdrop 컬러 lerp: 인트로(dark) → problem 섹션 도달 시(light) */
+      if (introBackdrop) {
+        introBackdrop.material.color.copy(BACKDROP_DARK).lerp(BACKDROP_LIGHT, backdropT);
+      }
+    }
+    updateOnScroll();
+    window.addEventListener('scroll', updateOnScroll, { passive: true });
+  </script>
+</body>
+</html>
