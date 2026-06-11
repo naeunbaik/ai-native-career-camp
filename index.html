@@ -105,7 +105,7 @@
       z-index: 3;
       background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
       background-size: 240px 240px;
-      opacity: 0.18;
+      opacity: 0.4;
       mix-blend-mode: overlay;
     }
 
@@ -4511,10 +4511,10 @@
       if (keycapMesh) {
         const m = keycapMesh.material;
         m.transmission = 1.0;
-        /* roughness 0.20: transmission mipmap 샘플링이 자연 블러되어
+        /* roughness 0.15: transmission mipmap 샘플링이 살짝 블러되어
            dispersion 색분리 가장자리가 부드러운 무지개 후광처럼 번짐.
            clearcoatRoughness는 0 유지 → 셸 표면 반사는 sharp. */
-        m.roughness = 0.20;
+        m.roughness = 0.15;
         m.ior = 1.55;
         m.thickness = 6.0;
         m.attenuationColor = new THREE.Color(1.0, 0.95, 0.92);
