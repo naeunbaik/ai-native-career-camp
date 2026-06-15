@@ -2561,29 +2561,48 @@
       .detail-row .detail-label + ul li,
       .detail-row .detail-label + p { font-size: 15px; }
       .detail-row ul { padding-left: 22px; margin-left: 0; }
-      /* 섹션 09 Tools 모바일 — Figma 13230:3664 (다크 + 캐러셀 가로 스크롤) */
-      /* Figma 13288:37754 — 모바일 주요 사용 툴 */
+      /* ──────────────────────────────────────────────────────────
+         섹션 07 Tools 모바일 — Figma 13288:37754 (07_Tool, 375×471)
+         iPhone 기준 구조:
+         · Section: padding 70px 20px, flex-col gap 15px
+         · Title:   20px SemiBold center, 섹션 inset(20px) 안에 위치
+         · Cards row(Right Box):
+           - Figma 상 폭 355px = 섹션 inner(335px) + 20px right-bleed
+           - 즉 좌측은 viewport_x=20, 우측은 viewport_x=viewport 까지 확장
+           - 3 cards × 300px + 2 × 10px gap = 920px → 우측으로 스크롤
+         · Card: 300px 고정, padding 32×28, gap 16, radius 18, bg #1e252c
+         ────────────────────────────────────────────────────────── */
       .ax-section.tools {
         background: #14191e;
-        padding: 70px 20px;          /* Figma py-[70px] px-[20px] */
-        gap: 15px;                    /* Figma 타이틀 ↔ 카드 row */
+        padding: 70px 20px;
+        gap: 15px;
+        display: flex;
+        flex-direction: column;
         align-items: stretch;
       }
       .tools-title {
-        font-size: 20px;              /* Figma P_Headline1/SB 20px */
+        font-family: "Wanted Sans", sans-serif;
+        font-size: 20px;
         font-weight: 600;
         line-height: 1.5;
         letter-spacing: -0.2px;
         color: #fff;
         text-align: center;
         width: 100%;
+        margin: 0;
       }
       .tools-grid {
-        width: 100vw;                  /* 데스크톱 max-width 100% 캡 무시 */
+        /* Right-bleed: 좌측은 section content 시작(viewport_x=20)에서
+           시작, 우측은 viewport 끝까지(그 너머로는 스크롤로 나옴).
+           width = viewport - 20 (좌측 padding 20px 만 남기고 우측 끝까지).
+           max-width: none 으로 데스크톱 max-width:100% 캡 우회. */
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        width: calc(100vw - 20px);
         max-width: none;
-        margin: 0 -20px;               /* section padding 20px 양쪽 상쇄 */
-        padding: 0;                    /* 좌우 여백 0 */
-        gap: 10px;                     /* Figma 카드 간격 10px */
+        margin: 0;
+        padding: 0;
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
@@ -2591,28 +2610,41 @@
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        /* Figma 13288:37754 — w-[300px] 고정 카드.
-           1카드 + 다음 카드 peek 로 자연스러운 가로 carousel 패턴 형성.
-           스크롤 시 scroll-snap 이 다음 카드로 정렬해 깔끔히 넘어감. */
         flex: 0 0 300px;
         width: 300px;
-        padding: 32px 28px;           /* Figma py-[32px] px-[28px] */
+        padding: 32px 28px;
         border-radius: 18px;
-        gap: 16px;                    /* Figma 로고 ↔ tool-body */
+        gap: 16px;
+        background: #1e252c;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        overflow: clip;
         scroll-snap-align: start;
       }
-      .tool-body { gap: 5px; }        /* Figma title ↔ desc 5px */
+      .tool-body {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
+      }
       .tool-name {
-        font-size: 18px;              /* Figma P_Headline2/B 18px Bold */
+        font-family: "Wanted Sans", sans-serif;
+        font-size: 18px;
         font-weight: 700;
         line-height: 1.5;
         letter-spacing: -0.18px;
+        color: #fff;
+        margin: 0;
       }
       .tool-desc {
-        font-size: 16px;              /* Figma Body3/R 16px */
+        font-family: "Wanted Sans", sans-serif;
+        font-size: 16px;
         font-weight: 400;
         line-height: 1.7;
         letter-spacing: -0.16px;
+        color: #ccc;
+        margin: 0;
       }
 
       /* 섹션 10 Why 모바일 — 카드 세로 스택 */
