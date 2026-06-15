@@ -1723,32 +1723,27 @@
     }
     .ins-headline-body p { margin: 0; }
 
-    /* 캐러셀 */
-    .ins-carousel {
-      display: flex;
-      flex-direction: column;
-      gap: 40px;
-      align-items: center;
+    /* 그룹(서브섹션) — "AI 전문 강사" / "원티드랩 현직자 멘토" */
+    .ins-group {
       width: 1060px;
       max-width: 100%;
-    }
-    /* 트랙 — 가로 스크롤 + scroll-snap (네이티브 드래그/스와이프) */
-    .ins-track {
-      width: 100%;
       display: flex;
-      gap: 16px;                  /* 카드 간 간격 16px */
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
-      cursor: grab;
-      user-select: none;          /* 드래그 시 텍스트 선택 방지 */
+      flex-direction: column;
+      gap: 40px;                       /* 그룹 타이틀 ↔ 카드 */
     }
-    .ins-track.is-grabbing { cursor: grabbing; }
-    .ins-track::-webkit-scrollbar { display: none; }
+    .ins-group-title {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 30px;                 /* Figma P_Headline1/SB */
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: -0.3px;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      width: 100%;
+    }
+    /* 강사 카드 — 가로 레이아웃 (사진 좌 + 콘텐츠 우) */
     .ins-card {
-      flex: 0 0 100%;             /* 한 카드 = 트랙 너비 */
-      scroll-snap-align: start;
       background: #1e252c;
       border-radius: 24px;
       padding: 50px;
@@ -1756,9 +1751,49 @@
       gap: 40px;
       align-items: flex-start;
       box-sizing: border-box;
+      width: 100%;
     }
-    /* 드래그 중 이미지 드래그 방지 (브라우저 기본 이미지 드래그 비활성화) */
-    .ins-card img { pointer-events: none; -webkit-user-drag: none; }
+    /* 멘토 그리드 — 3 cols × 2 rows */
+    .mentor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+    .mentor-card {
+      background: #1e252c;
+      border-radius: 8px;              /* Figma rounded-[8px] */
+      padding: 20px 20px 25px;         /* Figma pt-20 pr-20 pb-25 pl-20 */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;                       /* 사진 ↔ 콘텐츠 */
+      align-items: flex-start;
+      box-sizing: border-box;
+      overflow: clip;
+      min-width: 0;
+    }
+    .mentor-card .ins-content { width: 100%; }
+    .mentor-card .ins-photo  { border-radius: 8px; }
+    /* 멘토 카드 — 직책 라벨 (예: "원티드랩 AI 부문장") */
+    .ins-position {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.15px;
+      color: #ccc;
+      margin: 0;
+    }
+    /* 멘토 카드 — 소개 본문 */
+    .ins-mentor-bio {
+      font-family: "Wanted Sans", sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.15px;
+      color: #ccc;
+      margin: 0;
+    }
     .ins-photo {
       width: 140px;
       height: 140px;
@@ -1859,26 +1894,6 @@
       margin: 0;
     }
 
-    /* 페이지네이션 도트 */
-    .ins-pager {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: center;
-    }
-    .ins-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      transition: background-color 0.3s ease;
-    }
-    .ins-dot.is-active {
-      background: #89c8ea;            /* 활성 시 컬러만 변경 (원형 유지) */
-    }
     .instructor-disclaimer {
       width: 100%;
       max-width: 1100px;
@@ -2775,7 +2790,7 @@
       .price-tags { gap: 8px; }
       .price-tag { font-size: 13px; }
       .price-notes li { font-size: 13px; }
-      /* 섹션 07 Instructors 모바일 — Figma 13230:3605 (다크 + 캐러셀) */
+      /* 섹션 07 Instructors 모바일 — Figma 13230:3605 (다크 + 그리드 레이아웃) */
       .ax-section.instructors {
         background: #14191e;
         padding: 80px 20px;
@@ -2786,19 +2801,28 @@
       .ins-eyebrow { font-size: 16px; font-weight: 600; color: #89c8ea; }
       .ins-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
       .ins-headline-body { font-size: 14px; color: #ccc; }
-      .ins-carousel { width: 100%; gap: 24px; }
+      .ins-group { width: 100%; gap: 20px; }
+      .ins-group-title { font-size: 22px; }
       .ins-card {
         flex-direction: column;
         padding: 30px 24px;
         gap: 24px;
         border-radius: 18px;
+        width: 100%;
       }
+      .mentor-grid {
+        grid-template-columns: 1fr;       /* 모바일: 1 col 세로 스택 */
+        gap: 12px;
+      }
+      .mentor-card { padding: 20px; gap: 16px; }
       .ins-photo { width: 100px; height: 100px; border-radius: 10px; }
       .ins-content { gap: 12px; width: 100%; }
       .ins-name-row { flex-wrap: wrap; gap: 6px; }
       .ins-name { font-size: 20px; }
       .ins-role { font-size: 14px; }
       .ins-bio { font-size: 14px; }
+      .ins-position { font-size: 14px; }
+      .ins-mentor-bio { font-size: 14px; }
       .ins-history-label { font-size: 14px; }
       .ins-history li { font-size: 14px; }
 
@@ -3248,34 +3272,38 @@
       </div>
     </div>
 
-    <div class="ins-carousel">
-      <div class="ins-track">
-        <article class="ins-card" data-index="0">
-          <div class="ins-photo">
-            <img src="photo_lecturer.jpg" alt="강사 김대영" width="280" height="280" loading="lazy" decoding="async">
+    <div class="ins-group">
+      <h3 class="ins-group-title">AI 전문 강사</h3>
+      <article class="ins-card">
+        <div class="ins-photo">
+          <img src="photo_lecturer.jpg" alt="강사 김대영" width="280" height="280" loading="lazy" decoding="async">
+        </div>
+        <div class="ins-content">
+          <div class="ins-name-row">
+            <p class="ins-name">김대영</p>
+            <p class="ins-role">프론티어즈 강사</p>
           </div>
-          <div class="ins-content">
-            <div class="ins-name-row">
-              <p class="ins-name">김대영</p>
-              <p class="ins-role">프론티어즈 강사</p>
-            </div>
-            <div class="ins-bio">
-              <p>현) 이끔 기술이사, AI 개발 서비스 Think Code 운영</p>
-              <p>전) JYP엔터테인먼트, AI·업무 자동화 시스템 구축</p>
-              <p>전) RSQUARE, 데이터 엔지니어링·자동화 파이프라인 구축</p>
-            </div>
-            <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p class="ins-history-label">강의 및 활동 이력</p>
-              <ul>
-                <li>AI·데이터·백엔드 실전 교육 강사</li>
-                <li>LLM·자동화·MSA·데이터 분석 등 다수 강의 경험</li>
-              </ul>
-            </div>
+          <div class="ins-bio">
+            <p>현) 이끔 기술이사, AI 개발 서비스 Think Code 운영</p>
+            <p>전) JYP엔터테인먼트, AI·업무 자동화 시스템 구축</p>
+            <p>전) RSQUARE, 데이터 엔지니어링·자동화 파이프라인 구축</p>
           </div>
-        </article>
+          <div class="ins-divider"></div>
+          <div class="ins-history">
+            <p class="ins-history-label">강의 및 활동 이력</p>
+            <ul>
+              <li>AI·데이터·백엔드 실전 교육 강사</li>
+              <li>LLM·자동화·MSA·데이터 분석 등 다수 강의 경험</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </div>
 
-        <article class="ins-card" data-index="1">
+    <div class="ins-group">
+      <h3 class="ins-group-title">원티드랩 현직자 멘토</h3>
+      <div class="mentor-grid">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_ai.jpg" alt="멘토 정기수" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3284,17 +3312,13 @@
               <p class="ins-name">정기수</p>
               <p class="ins-role">AI 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 AI 부문장</p>
-            </div>
+            <p class="ins-position">원티드랩 AI 부문장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
 
-        <article class="ins-card" data-index="2">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_po.jpg" alt="PO 멘토" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3303,17 +3327,13 @@
               <p class="ins-name">김티어</p>
               <p class="ins-role">PO 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 PO 부문장</p>
-            </div>
+            <p class="ins-position">원티드랩 PO 부문장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
 
-        <article class="ins-card" data-index="3">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_dev.jpg" alt="개발 멘토" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3322,17 +3342,13 @@
               <p class="ins-name">김티어</p>
               <p class="ins-role">개발 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 개발 팀장</p>
-            </div>
+            <p class="ins-position">원티드랩 개발 팀장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
 
-        <article class="ins-card" data-index="4">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_design.jpg" alt="디자인 멘토" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3341,17 +3357,13 @@
               <p class="ins-name">김티어</p>
               <p class="ins-role">디자인 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 디자인 팀장</p>
-            </div>
+            <p class="ins-position">원티드랩 디자인 팀장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
 
-        <article class="ins-card" data-index="5">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_marketing.jpg" alt="마케팅 멘토" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3360,17 +3372,13 @@
               <p class="ins-name">김티어</p>
               <p class="ins-role">마케팅 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 마케팅 파트장</p>
-            </div>
+            <p class="ins-position">원티드랩 마케팅 파트장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
 
-        <article class="ins-card" data-index="6">
+        <article class="mentor-card">
           <div class="ins-photo">
             <img src="photo_hr.jpg" alt="HR 멘토" width="280" height="280" loading="lazy" decoding="async">
           </div>
@@ -3379,25 +3387,11 @@
               <p class="ins-name">김티어</p>
               <p class="ins-role">HR 멘토</p>
             </div>
-            <div class="ins-bio">
-              <p>원티드랩 HR 팀장</p>
-            </div>
+            <p class="ins-position">원티드랩 HR 팀장</p>
             <div class="ins-divider"></div>
-            <div class="ins-history">
-              <p>전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
-            </div>
+            <p class="ins-mentor-bio">전환이 실제 업무 방식의 변화로 이어질 수 있도록, AI 관점에서 실무 적용의 방향과 기준을 제시합니다.</p>
           </div>
         </article>
-      </div>
-
-      <div class="ins-pager" role="tablist" aria-label="강사·멘토 선택">
-        <button class="ins-dot is-active" type="button" data-index="0" aria-label="1번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="1" aria-label="2번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="2" aria-label="3번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="3" aria-label="4번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="4" aria-label="5번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="5" aria-label="6번째 카드"></button>
-        <button class="ins-dot" type="button" data-index="6" aria-label="7번째 카드"></button>
       </div>
     </div>
   </section>
@@ -3847,132 +3841,8 @@
       applyStep('1');
     })();
 
-    /* ── 섹션 7 강사·멘토 캐러셀 — 슬라이드(좌우) + 드래그/스와이프 + 도트 ─── */
-    (function setupInstructorsCarousel() {
-      const root  = document.querySelector('.ax-section.instructors');
-      const track = document.querySelector('.ax-section.instructors .ins-track');
-      const cards = document.querySelectorAll('.ax-section.instructors .ins-card');
-      const dots  = document.querySelectorAll('.ax-section.instructors .ins-dot');
-      if (!track || !cards.length || !dots.length) return;
-
-      /* 카드 인덱스로 스크롤 */
-      function goTo(idx) {
-        const card = cards[idx];
-        if (!card) return;
-        track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' });
-      }
-
-      /* 도트 클릭 → 해당 카드로 부드럽게 스크롤 (수동 조작 → 자동재생 일시중지) */
-      dots.forEach((dot, idx) => {
-        dot.addEventListener('click', () => {
-          pauseAutoplay();
-          goTo(idx);
-        });
-      });
-
-      /* 가장 가까운 카드 인덱스 계산 (gap 고려해 offsetLeft 기준) */
-      function nearestIdx() {
-        const trackLeft = track.offsetLeft;
-        let best = 0;
-        let min = Infinity;
-        cards.forEach((c, i) => {
-          const dist = Math.abs(track.scrollLeft - (c.offsetLeft - trackLeft));
-          if (dist < min) { min = dist; best = i; }
-        });
-        return best;
-      }
-
-      /* 스크롤 위치 → 활성 도트 동기화 */
-      let scrollTick;
-      track.addEventListener('scroll', () => {
-        cancelAnimationFrame(scrollTick);
-        scrollTick = requestAnimationFrame(() => {
-          const idx = nearestIdx();
-          dots.forEach((d, i) => d.classList.toggle('is-active', i === idx));
-        });
-      }, { passive: true });
-
-      /* 마우스 드래그로 좌우 슬라이드 (터치는 overflow-x 가 네이티브로 처리) */
-      let isDown = false;
-      let startX = 0;
-      let startScroll = 0;
-      let moved = false;
-
-      track.addEventListener('mousedown', (e) => {
-        isDown = true;
-        moved = false;
-        startX = e.pageX;
-        startScroll = track.scrollLeft;
-        track.classList.add('is-grabbing');
-        pauseAutoplay();
-      });
-      window.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        const dx = e.pageX - startX;
-        if (Math.abs(dx) > 3) moved = true;
-        track.scrollLeft = startScroll - dx;
-      });
-      function endDrag() {
-        if (!isDown) return;
-        isDown = false;
-        track.classList.remove('is-grabbing');
-        if (moved) {
-          /* 가장 가까운 카드로 스냅 (gap 고려) */
-          const idx = nearestIdx();
-          track.scrollTo({ left: cards[idx].offsetLeft - track.offsetLeft, behavior: 'smooth' });
-        }
-      }
-      window.addEventListener('mouseup', endDrag);
-      window.addEventListener('mouseleave', endDrag);
-
-      /* 드래그 시 카드 내부 텍스트/이미지 클릭 막기 (클릭 vs 드래그 구분) */
-      track.addEventListener('click', (e) => {
-        if (moved) { e.preventDefault(); e.stopPropagation(); }
-      }, true);
-
-      /* ── 자동 재생: 5초마다 다음 카드, 마지막 → 처음 순환 ───────────── */
-      const AUTOPLAY_MS = 5000;
-      const RESUME_MS   = 8000;     /* 수동 조작 후 자동재생 재개 대기 */
-      let autoplayTimer = null;
-      let resumeTimer   = null;
-      let inView = true;            /* 섹션이 뷰포트에 있는지 */
-
-      function startAutoplay() {
-        stopAutoplay();
-        if (!inView) return;
-        autoplayTimer = setInterval(() => {
-          const cur  = nearestIdx();
-          const next = (cur + 1) % cards.length;
-          goTo(next);
-        }, AUTOPLAY_MS);
-      }
-      function stopAutoplay() {
-        if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
-      }
-      function pauseAutoplay() {
-        stopAutoplay();
-        if (resumeTimer) clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(startAutoplay, RESUME_MS);
-      }
-
-      /* 호버 시 일시정지, 떠나면 재개 */
-      root.addEventListener('mouseenter', stopAutoplay);
-      root.addEventListener('mouseleave', startAutoplay);
-
-      /* 뷰포트에서 벗어나면 정지 (배터리/CPU 절약) */
-      if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            inView = entry.isIntersecting;
-            if (inView) startAutoplay();
-            else stopAutoplay();
-          });
-        }, { threshold: 0.2 });
-        io.observe(root);
-      } else {
-        startAutoplay();
-      }
-    })();
+    /* 섹션 7 (강사·멘토) — 캐러셀 → 그리드 레이아웃 변경 (Figma 13230:3605)
+       기존 setupInstructorsCarousel 제거. 더 이상 자동재생/드래그/도트 필요 없음. */
 
     /* ── 모바일: 글래스 프로스트 카드 스크롤 자동 focus ─────────
        카드가 뷰포트 중앙 영역(상하 40% 잘라낸 중간 20% strip)에
