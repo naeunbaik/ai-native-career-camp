@@ -2374,47 +2374,98 @@
 
     /* 태블릿 브레이크포인트 제거 — 데스크탑에서 모바일(768px)로 직접 전환 */
     @media (max-width: 768px) {
+      /* ──────────────────────────────────────────────────────────
+         Figma 13293:6485 모바일 인트로 — flex-col 흐름 레이아웃
+         · Section padding 70px 20px, flex-col, 높이 625px 유지
+         · Order 1: .ax-header (eyebrow + title, 15px gap)
+         · Order 2: .ax-subtitle (footer 에서 가져옴 — display:contents)
+         · Order 3: ::after spacer (3D 키캡이 시각적으로 채우는 영역)
+         · Order 4: .ax-footer-info (footer 에서 가져옴)
+         · 3D 키캡(position:fixed)과 뒤 텍스트는 그대로 유지
+         ────────────────────────────────────────────────────────── */
       .ax-section.intro,
-      html.is-embedded .ax-section.intro { height: 625px; min-height: 625px; }
-      /* Figma 13293:6485 모바일 인트로 typography */
-      .ax-header { top: 32px; width: calc(100% - 40px); gap: 15px; }
+      html.is-embedded .ax-section.intro {
+        height: 625px;
+        min-height: 625px;
+        display: flex;
+        flex-direction: column;
+        padding: 70px 20px;
+        box-sizing: border-box;
+        align-items: stretch;
+      }
+      .ax-section.intro::after {
+        content: '';
+        order: 3;
+        flex: 1;                    /* 가운데 빈 공간 — 3D 키캡이 그 위로 floating */
+      }
+      .ax-header {
+        position: static;            /* 데스크탑 absolute 해제 */
+        top: auto;
+        left: auto;
+        transform: none;
+        max-width: none;
+        width: 100%;
+        margin: 0;
+        order: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;                   /* Figma eyebrow ↔ title */
+        pointer-events: auto;
+      }
       .ax-eyebrow {
         font-size: 16px;
         font-weight: 600;            /* Figma Body3/SB */
         line-height: 1.7;
         letter-spacing: -0.16px;
         color: #89c8ea;
+        margin: 0;
       }
-      .ax-headline-group { gap: 15px; }   /* Figma 가 eyebrow ↔ title ↔ subtitle 15px 통일 */
       .ax-title {
         font-size: 48px;             /* Figma H2_Display/M */
         font-weight: 500;
         line-height: 1.3;
         letter-spacing: -0.72px;
         color: #fff;
+        margin: 0;
       }
-      .ax-subtitle {
+      .ax-headline-group { gap: 15px; }
+      .mobile-br { display: inline; }
+      .desktop-br { display: none; }
+
+      /* footer 컨테이너 자체는 사라지고 자식만 intro flex 흐름에 참여 */
+      .ax-footer {
+        display: contents;
+      }
+      /* subtitle 이 footer 에서 header 블록 직후 위치로 이동 */
+      .ax-footer .ax-subtitle {
+        order: 2;
+        margin: 0;
+        margin-top: 15px;            /* Figma title ↔ subtitle 15px */
+        width: 100%;
         font-size: 14px;             /* Figma Label1/SB */
         font-weight: 600;
         line-height: 1.7;
         letter-spacing: -0.14px;
         color: #ccc;
+        text-align: left;
+        pointer-events: auto;
       }
-      .mobile-br { display: inline; }
-      .desktop-br { display: none; }
-      .ax-footer { bottom: 32px; width: calc(100% - 40px); font-size: 14px; flex-direction: column; align-items: flex-start; gap: 16px; }
       .ax-footer br.m-only { display: initial; }
       .ax-footer-info {
-        font-size: 14px;             /* Figma 14px */
-        gap: 5px;                     /* Figma label ↔ value 5px */
+        order: 4;
+        margin: 0;
+        width: 100%;
+        font-size: 14px;
+        gap: 5px;
         letter-spacing: -0.14px;
+        pointer-events: auto;
       }
       .ax-footer-info-labels {
-        width: 65px;                  /* Figma 65px 고정 */
+        width: 65px;
         min-width: 65px;
-        font-weight: 600;             /* Figma Label1/SB */
+        font-weight: 600;            /* Label1/SB */
       }
-      .ax-footer-info-values { font-weight: 400; }   /* Figma Label1/R */
+      .ax-footer-info-values { font-weight: 400; }   /* Label1/R */
       .ax-section.problem {
         padding: 80px 20px;
         background: linear-gradient(
