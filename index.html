@@ -2591,12 +2591,11 @@
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        /* 카드 width = viewport - 60px → 다음 카드 peek 가 30px 정도 보임.
-           카드 padding-left 28px 라서 text 는 viewport 안쪽으로 거의 안
-           들어오고(2px 정도), 카드 엣지/배경만 또렷이 노출.
-           구성: 좌 padding 20 + 카드 width(100vw-60) + gap 10 + peek 30 = 100vw */
-        flex: 0 0 calc(100vw - 60px);
-        width: calc(100vw - 60px);
+        /* Figma 13288:37754 — w-[300px] 고정 카드.
+           1카드 + 다음 카드 peek 로 자연스러운 가로 carousel 패턴 형성.
+           스크롤 시 scroll-snap 이 다음 카드로 정렬해 깔끔히 넘어감. */
+        flex: 0 0 300px;
+        width: 300px;
         padding: 32px 28px;           /* Figma py-[32px] px-[28px] */
         border-radius: 18px;
         gap: 16px;                    /* Figma 로고 ↔ tool-body */
@@ -2743,11 +2742,10 @@
       .benefits-grid::-webkit-scrollbar { display: none; }
       .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
       .benefit-card {
-        /* 카드 width = viewport - 60 → 다음 카드 peek ~30px (카드 padding
-           24px 보다 약간 큰 정도, 텍스트는 6px 정도만 viewport 끝에 닿아
-           가독 영향 거의 없음. 다음 카드가 "살짝 cut" 되어 보이는 인상) */
-        flex: 0 0 calc(100vw - 60px);
-        width: calc(100vw - 60px);
+        /* Figma 사양에 맞춰 300px 고정 — tools 와 동일 패턴.
+           1카드 + 다음 카드 peek 자연스러운 가로 carousel. */
+        flex: 0 0 300px;
+        width: 300px;
         height: auto;
         min-height: 180px;
         padding: 24px;
