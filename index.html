@@ -4812,13 +4812,23 @@
     function updateEmbedShift() {
       const header = document.querySelector('.ax-header');
       const footer = document.querySelector('.ax-footer');
+      const intro  = document.querySelector('.ax-section.intro');
       const h = getCanvasH();
       let shiftPx = 0;
-      if (header && footer) {
+      if (header && footer && intro) {
         const headerBottom = header.offsetTop + header.offsetHeight;
         const footerTop = footer.offsetTop;
         const desiredCenter = (headerBottom + footerTop) / 2;
-        shiftPx = desiredCenter - h / 2;   // 양수 = 아래로 이동
+        // viewport center 가 아닌 intro section center 기준으로 보정
+        //   section 이 viewport 보다 작아도 키캡이 section 중앙에 정렬됨
+        const sectionRect = intro.getBoundingClientRect();
+        const sectionCenter = sectionRect.top + intro.offsetHeight / 2;
+        const viewportCenter = h / 2;
+        // 키캡의 기본 렌더 위치는 viewport center → section center 로 옮기는 보정
+        const baseOffset = sectionCenter - viewportCenter;
+        // desiredCenter 는 section 내부 y 좌표. section 의 top 을 더하면 viewport 절대 y
+        const desiredViewportY = sectionRect.top + desiredCenter;
+        shiftPx = desiredViewportY - viewportCenter;   // 양수 = 아래로 이동
       }
       const visH = 2 * camera.position.z * Math.tan(camera.fov * Math.PI / 360);
       // 화면 Y는 아래가 양수, 월드 Y는 위가 양수 → 부호 반전
