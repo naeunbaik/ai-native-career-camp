@@ -2579,10 +2579,11 @@
         width: 100%;
       }
       .tools-grid {
-        width: calc(100% + 40px);
-        margin: 0 -20px;
-        padding: 0;                   /* 좌우 여백 0 — 카드가 viewport 끝까지 */
-        gap: 10px;                    /* Figma 카드 간격 10px */
+        width: 100vw;                  /* 데스크톱 max-width 100% 캡 무시 */
+        max-width: none;
+        margin: 0 -20px;               /* section padding 20px 양쪽 상쇄 */
+        padding: 0;                    /* 좌우 여백 0 */
+        gap: 10px;                     /* Figma 카드 간격 10px */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
@@ -2729,9 +2730,10 @@
         display: flex;
         flex-direction: row;
         gap: 10px;
-        width: calc(100% + 40px);
-        margin: 0 -20px;
-        padding: 10px 0;               /* 좌우 여백 0 — 카드가 viewport 끝까지 */
+        width: 100vw;                  /* 데스크톱 max-width 100% 캡 무시 */
+        max-width: none;
+        margin: 0 -20px;               /* section padding 양쪽 상쇄 */
+        padding: 10px 0;               /* 좌우 여백 0 */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
