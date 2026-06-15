@@ -4002,25 +4002,51 @@
       cards.forEach((card) => io.observe(card));
     })();
 
-    /* ── 솔루션 리스트 — 호버 시 해당 항목 강조 (자동 사이클 제거) ─────────
-       기본: 첫 항목 강조(HTML 정적). hover 시 해당 항목 강조,
-       mouseleave 시 첫 항목으로 복귀 */
-    (function setupSolutionHover() {
+    /* ── 솔루션 리스트 — 위→아래 순차 하이라이트 자동 사이클 (Figma 13230:3514)
+       호버 인터랙션 없음. 일정 간격마다 다음 항목으로 강조 이동, 마지막 → 처음 루프.
+       뷰포트 밖이면 정지 (CPU/배터리 절약), 재진입 시 처음부터 재개 */
+    (function setupSolutionAutoCycle() {
       const items = document.querySelectorAll('.solution-item');
       if (!items.length) return;
+      const list = document.querySelector('.solution-list');
 
-      function applyHighlight(idx) {
-        items.forEach((it, i) => it.classList.toggle('is-primary', i === idx));
+      const STEP_MS = 1400;        /* 항목 간 간격 */
+      let idx = 0;
+      let timer = null;
+
+      function applyHighlight(i) {
+        items.forEach((it, n) => it.classList.toggle('is-primary', n === i));
+      }
+      function tick() {
+        idx = (idx + 1) % items.length;
+        applyHighlight(idx);
+      }
+      function start() {
+        if (timer) return;
+        applyHighlight(idx);
+        timer = setInterval(tick, STEP_MS);
+      }
+      function stop() {
+        if (timer) { clearInterval(timer); timer = null; }
       }
 
-      items.forEach((item, idx) => {
-        item.addEventListener('mouseenter', () => applyHighlight(idx));
-      });
-
-      /* 컨테이너 외부로 마우스가 나가면 → 첫 항목으로 복귀 */
-      const list = document.querySelector('.solution-list');
-      if (list) {
-        list.addEventListener('mouseleave', () => applyHighlight(0));
+      /* 뷰포트 진입/이탈 감지 — 보일 때만 사이클 */
+      if ('IntersectionObserver' in window && list) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              idx = 0;             /* 매 진입 시 첫 항목부터 다시 시작 */
+              applyHighlight(0);
+              start();
+            } else {
+              stop();
+            }
+          });
+        }, { threshold: 0.25 });
+        io.observe(list);
+      } else {
+        /* fallback: 즉시 시작, 무한 루프 */
+        start();
       }
     })();
 
