@@ -2532,43 +2532,80 @@
         letter-spacing: -0.13px;
       }
       /* 섹션 03 모바일 — 다크 + 2-컬럼 카드 세로 stack + 파트너 로고 */
+      /* ──────────────────────────────────────────────────────────
+         Figma 13294:3466 모바일 섹션 3 (signal)
+         · Section: padding 70 20, gap 35, items-center
+         · Header(signal-intro): gap 15, items-center
+         · Card: 335px 고정, 세로 stack (이미지 248 + 텍스트), rounded 24
+         · Card-text: padding 32 28, gap 16, title 24 Medium, body 16 Regular
+         · Partners: gap 20, smaller logo sizes (Figma 원본)
+         ────────────────────────────────────────────────────────── */
       .ax-section.signal {
         background: #14191e;
-        padding: 80px 20px 0;
-        gap: 30px;
-        align-items: stretch;
+        padding: 70px 20px;
+        gap: 35px;
+        align-items: center;
       }
-      .signal-intro { gap: 12px; align-items: center; text-align: center; }
-      .signal-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
-      .signal-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
-      /* 카드 — 세로 stack (이미지 위, 텍스트 아래) */
+      .signal-intro {
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+      }
+      .signal-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
+      .signal-title {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
+        color: #fff;
+      }
       .signal-card {
         flex-direction: column;
-        width: 100%;
+        width: 335px;
+        max-width: 100%;
         height: auto;
-        border-radius: 18px;
+        border-radius: 24px;
       }
       .signal-card-image {
         flex: none;
         width: 100%;
-        aspect-ratio: 880 / 600;
-        border-radius: 18px 18px 0 0;
+        aspect-ratio: 335 / 248;
+        border-radius: 24px 24px 0 0;
       }
       .signal-card-text {
         flex: none;
         width: 100%;
-        padding: 24px 20px;
+        padding: 32px 28px;
         gap: 16px;
-        border-radius: 0 0 18px 18px;
+        border-radius: 0 0 24px 24px;
       }
-      .signal-card-title { font-size: 22px; color: #fff; }
-      .signal-card-body { font-size: 14px; color: #ccc; }
+      .signal-card-title {
+        font-size: 24px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.24px;
+        color: #fff;
+      }
+      .signal-card-body {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+      }
       .signal-card-body br { display: none; }
-      /* 파트너 로고 — Figma 원본 비율 유지하며 축소 (각 약 80%) */
-      .signal-partners { gap: 28px; }
-      .signal-partner--molab  { width: 100px;   height: 32px;   }
-      .signal-partner--kcci   { width: 140px;   height: 26px;   }
-      .signal-partner--wanted { width: 104px;   height: 30px;   }
+      /* 파트너 로고 — Figma 원본 크기 (모바일은 더 작게) */
+      .signal-partners { gap: 20px; }
+      .signal-partner--molab  { width: 74.725px;  height: 24px;   }
+      .signal-partner--kcci   { width: 105.338px; height: 19.2px; }
+      .signal-partner--wanted { width: 77px;      height: 22.2px; }
       /* 섹션 04 Solution 모바일 — Figma 13230:3514 (다크 + 체크리스트) */
       .ax-section.solution {
         background: #14191e;
