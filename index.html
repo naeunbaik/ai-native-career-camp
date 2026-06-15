@@ -2591,12 +2591,12 @@
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        /* viewport 폭에 비례 — 어떤 모바일 너비든 카드 1개가 viewport 거의
-           가득 채우고 우측엔 ~10px 카드 엣지만 노출 (peek 가 card padding
-           28px 보다 작아서 다음 카드 텍스트는 들어가지 않음). max-width 캡
-           제거 → 넓은 모바일에서도 카드가 viewport 끝까지 확장됨. */
-        flex: 0 0 calc(100vw - 40px);
-        width: calc(100vw - 40px);
+        /* 카드 width = viewport - 60px → 다음 카드 peek 가 30px 정도 보임.
+           카드 padding-left 28px 라서 text 는 viewport 안쪽으로 거의 안
+           들어오고(2px 정도), 카드 엣지/배경만 또렷이 노출.
+           구성: 좌 padding 20 + 카드 width(100vw-60) + gap 10 + peek 30 = 100vw */
+        flex: 0 0 calc(100vw - 60px);
+        width: calc(100vw - 60px);
         padding: 32px 28px;           /* Figma py-[32px] px-[28px] */
         border-radius: 18px;
         gap: 16px;                    /* Figma 로고 ↔ tool-body */
@@ -2743,11 +2743,11 @@
       .benefits-grid::-webkit-scrollbar { display: none; }
       .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
       .benefit-card {
-        /* viewport - 40: 카드 padding(24px) 보다 작은 peek (~10px) 으로
-           다음 카드 텍스트 들어가지 않음. max-width 캡 제거 → 어떤 모바일
-           너비든 viewport 끝까지 확장. */
-        flex: 0 0 calc(100vw - 40px);
-        width: calc(100vw - 40px);
+        /* 카드 width = viewport - 60 → 다음 카드 peek ~30px (카드 padding
+           24px 보다 약간 큰 정도, 텍스트는 6px 정도만 viewport 끝에 닿아
+           가독 영향 거의 없음. 다음 카드가 "살짝 cut" 되어 보이는 인상) */
+        flex: 0 0 calc(100vw - 60px);
+        width: calc(100vw - 60px);
         height: auto;
         min-height: 180px;
         padding: 24px;
