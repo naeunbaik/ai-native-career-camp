@@ -1411,7 +1411,8 @@
       max-width: 100%;
     }
     /* 데스크탑: 페이저 숨김 (모바일 캐러셀 전용) */
-    .benefits-pager { display: none; }
+    .benefits-pager,
+    .mentor-pager { display: none; }
     .benefits-row {
       display: flex;
       gap: 16px;
@@ -3079,17 +3080,19 @@
         letter-spacing: -0.15px;
         color: #ececec;            /* Figma gy-02 (was #ccc gy-03) */
       }
-      /* 캐러셀 하단 페이저 (Figma 13296:56600 — 110×10) */
-      .benefits-pager {
+      /* 캐러셀 하단 페이저 — 공통 사양 (도트 10px, gap 5px) */
+      .benefits-pager,
+      .mentor-pager {
         display: flex;
-        gap: 18px;                  /* 8 + 18×4 ≈ 112 (Figma 110에 근사) */
+        gap: 5px;
         align-items: center;
         justify-content: center;
         width: 100%;
       }
-      .benefits-dot {
-        width: 8px;
-        height: 8px;
+      .benefits-dot,
+      .mentor-dot {
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.2);
         border: none;
@@ -3097,8 +3100,9 @@
         padding: 0;
         transition: background-color 0.3s ease;
       }
-      .benefits-dot.is-active {
-        background: #89c8ea;        /* Figma 액티브 도트 컬러 */
+      .benefits-dot.is-active,
+      .mentor-dot.is-active {
+        background: #89c8ea;
       }
       /* 모바일: 헤더 / step 리스트 세로 stack, step row 내부도 세로 stack */
       /* 섹션 10 Schedule 모바일 — Figma 13067:3495 */
@@ -3212,30 +3216,34 @@
         text-align: center;
         width: 100%;
       }
-      /* 강사 카드 (단일) */
+      /* 강사 카드 (단일, 반응형 — 섹션 content 영역에 꽉 채움) */
       .ins-card {
         flex-direction: column;
         padding: 32px 28px;
         gap: 20px;
         border-radius: 18px;
-        width: 335px;
+        width: 100%;
         max-width: 100%;
       }
       .ins-card .ins-photo { width: 100px; height: 100px; border-radius: 8px; }
       .ins-card .ins-name-row { gap: 5px; flex-wrap: wrap; }
-      /* 멘토 카드 — 가로 캐러셀 (3 cards, 각 300px) */
+      /* 멘토 카드 — 가로 캐러셀 (benefits 와 동일 bleed + scroll-padding) */
       .mentor-grid {
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;                /* 데스크탑 grid 해제 */
         grid-template-columns: none;
         gap: 10px;
-        width: 335px;
-        max-width: 100%;
+        width: calc(100% + 40px);         /* 섹션 padding 양쪽 상쇄 → viewport 끝까지 */
+        max-width: none;
+        margin: 0 -20px;
+        padding: 0 20px;                   /* scroll endpoint 20px 여백 */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
+        scroll-padding-left: 20px;
+        scroll-padding-right: 20px;
       }
       .mentor-grid::-webkit-scrollbar { display: none; }
       .mentor-card {
@@ -3941,6 +3949,15 @@
           </div>
         </article>
       </div>
+
+      <div class="mentor-pager" role="tablist" aria-label="현직자 멘토 카드 선택">
+        <button class="mentor-dot is-active" type="button" data-index="0" aria-label="1번째 멘토"></button>
+        <button class="mentor-dot" type="button" data-index="1" aria-label="2번째 멘토"></button>
+        <button class="mentor-dot" type="button" data-index="2" aria-label="3번째 멘토"></button>
+        <button class="mentor-dot" type="button" data-index="3" aria-label="4번째 멘토"></button>
+        <button class="mentor-dot" type="button" data-index="4" aria-label="5번째 멘토"></button>
+        <button class="mentor-dot" type="button" data-index="5" aria-label="6번째 멘토"></button>
+      </div>
     </div>
   </section>
 
@@ -4471,14 +4488,11 @@
     /* 섹션 7 (강사·멘토) — 캐러셀 → 그리드 레이아웃 변경 (Figma 13230:3605)
        기존 setupInstructorsCarousel 제거. 더 이상 자동재생/드래그/도트 필요 없음. */
 
-    /* ── 섹션 6 수강생 혜택 — 모바일 캐러셀 페이저 동기화 ────────────
-       Figma 13294:3760 — 5개 카드 가로 스크롤 + 하단 도트 nav */
-    (function setupBenefitsPager() {
-      const grid = document.querySelector('.benefits-grid');
-      const dots = document.querySelectorAll('.benefits-dot');
-      const cards = document.querySelectorAll('.benefit-card');
-      if (!grid || !dots.length || !cards.length) return;
-
+    /* ── 모바일 캐러셀 페이저 동기화 — benefits / mentor 공통 패턴 ──── */
+    function bindCarouselPager(grid, dotSelector, cardSelector) {
+      const dots = grid.parentElement.querySelectorAll(dotSelector);
+      const cards = grid.querySelectorAll(cardSelector);
+      if (!dots.length || !cards.length) return;
       /* 도트 클릭 → 해당 카드로 스크롤 */
       dots.forEach((dot, idx) => {
         dot.addEventListener('click', () => {
@@ -4487,12 +4501,11 @@
           grid.scrollTo({ left: card.offsetLeft - grid.offsetLeft, behavior: 'smooth' });
         });
       });
-
-      /* 스크롤 위치 → 가장 가까운 카드 인덱스 → 활성 도트 동기화 */
-      let scrollTick;
+      /* 스크롤 → 가장 가까운 카드 인덱스 → 활성 도트 동기화 */
+      let tick;
       grid.addEventListener('scroll', () => {
-        cancelAnimationFrame(scrollTick);
-        scrollTick = requestAnimationFrame(() => {
+        cancelAnimationFrame(tick);
+        tick = requestAnimationFrame(() => {
           const gridLeft = grid.offsetLeft;
           let best = 0, min = Infinity;
           cards.forEach((c, i) => {
@@ -4502,6 +4515,16 @@
           dots.forEach((d, i) => d.classList.toggle('is-active', i === best));
         });
       }, { passive: true });
+    }
+    /* 섹션 6 수강생 혜택 페이저 */
+    (function () {
+      const grid = document.querySelector('.benefits-grid');
+      if (grid) bindCarouselPager(grid, '.benefits-dot', '.benefit-card');
+    })();
+    /* 섹션 7 멘토 페이저 */
+    (function () {
+      const grid = document.querySelector('.mentor-grid');
+      if (grid) bindCarouselPager(grid, '.mentor-dot', '.mentor-card');
     })();
 
     /* ── 모바일: 글래스 프로스트 카드 스크롤 자동 focus ─────────
