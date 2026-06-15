@@ -2062,6 +2062,8 @@
     }
     /* `hidden` 속성이 display: flex 에 의해 무시되는 문제 해결 — 예시 없는 회차는 행 자체 숨김 */
     .rm-detail-row[hidden] { display: none; }
+    /* 데스크톱: 모바일 아코디언 리스트 숨김 */
+    .rm-mobile-list { display: none; }
     .rm-detail-row-label {
       width: 50px;
       flex-shrink: 0;
@@ -2826,46 +2828,88 @@
       .ins-history-label { font-size: 14px; }
       .ins-history li { font-size: 14px; }
 
-      /* 섹션 08 Roadmap 모바일 — 단계별 아코디언 드롭다운 */
+      /* 섹션 08 Roadmap 모바일 — detail-head 자체가 아코디언 트리거 */
       .ax-section.roadmap { background: #14191e; padding: 80px 20px; gap: 30px; }
       .rm-head { gap: 12px; }
       .rm-eyebrow { font-size: 16px; }
       .rm-title { font-size: 28px; line-height: 1.4; }
       .rm-body { width: 100%; gap: 20px; }
-      .rm-tabs { flex-direction: column; gap: 0; }
-      .rm-steps { width: 100%; gap: 8px; }
-      .rm-step {
-        padding: 16px 48px 16px 20px;   /* 우측 chevron 공간 확보 */
-        border-radius: 8px;
-        gap: 4px;
-        position: relative;
+      /* 데스크톱 .rm-tabs(좌측 5단계 버튼 + 우측 detail) 영역 전체 숨김 */
+      .rm-tabs { display: none; }
+
+      /* 모바일 전용 아코디언 리스트 */
+      .rm-mobile-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
       }
-      .rm-step.is-active { border-radius: 10px 10px 0 0; }   /* 펼친 상태: 하단 라운드 제거 */
-      .rm-step-label { font-size: 13px; }
-      .rm-step-title { font-size: 14px; }
-      /* Chevron 인디케이터 — 접힘 ▼ / 펼침 ▲ */
-      .rm-step::after {
+      .rm-mobile-item {
+        background: #1e252c;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .rm-mobile-head {
+        width: 100%;
+        padding: 20px 48px 20px 20px;   /* 우측 chevron 공간 */
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        align-items: flex-start;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+        position: relative;
+        color: inherit;
+      }
+      .rm-mobile-head .rm-detail-label {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.01em;
+        color: #89c8ea;
+        margin: 0;
+      }
+      .rm-mobile-head .rm-detail-title {
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.4;
+        letter-spacing: -0.01em;
+        color: #fff;
+        margin: 0;
+      }
+      /* Chevron — 닫힘 ▼ / 열림 ▲ */
+      .rm-mobile-head::after {
         content: '';
         position: absolute;
         right: 18px;
         top: 50%;
         width: 14px;
         height: 10px;
-        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23888' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2389c8ea' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
         transform: translateY(-50%);
-        transition: transform 0.25s ease, opacity 0.25s ease;
+        transition: transform 0.3s ease;
         pointer-events: none;
       }
-      .rm-step.is-active::after {
+      .rm-mobile-item.is-open .rm-mobile-head::after {
         transform: translateY(-50%) rotate(180deg);
-        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2389c8ea' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
       }
-      /* Detail 패널이 .rm-steps 안으로 이동된 상태 (active step 바로 아래) */
-      .rm-steps > .rm-detail {
-        flex: 0 0 auto;
-        width: 100%;
-        margin-top: -8px;             /* steps gap 8px 상쇄 → 시각적으로 step과 붙음 */
-        border-radius: 0 0 10px 10px; /* 상단 라운드 제거: active step과 연결된 느낌 */
+      /* Body — max-height transition으로 부드러운 펼침/접힘 */
+      .rm-mobile-body {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .rm-mobile-item.is-open .rm-mobile-body {
+        max-height: 1500px;
+      }
+      .rm-mobile-body-inner {
+        padding: 0 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
       .rm-detail { padding: 24px 20px; gap: 16px; border-radius: 10px; }
       .rm-detail-head { gap: 6px; }
@@ -3838,37 +3882,14 @@
           '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[ch]));
       }
-      const detailEl = document.querySelector('.rm-detail');
-      const stepsContainer = document.querySelector('.rm-steps');
-      const tabsContainer = document.querySelector('.rm-tabs');
-      const mobileMQ = window.matchMedia('(max-width: 768px)');
-
-      /* 모바일: detail 패널을 active step 바로 다음으로 이동 (아코디언)
-         데스크톱: detail은 .rm-tabs 직속 .rm-steps 다음 위치로 복원 */
-      function placeDetailForViewport(stepKey) {
-        if (!detailEl || !stepsContainer || !tabsContainer) return;
-        if (mobileMQ.matches) {
-          const active = document.querySelector(`.rm-step[data-step="${stepKey}"]`);
-          if (active && active.nextElementSibling !== detailEl) {
-            active.insertAdjacentElement('afterend', detailEl);
-          }
-        } else {
-          /* 데스크톱 위치: .rm-tabs 의 .rm-steps 바로 뒤 */
-          if (detailEl.parentElement !== tabsContainer
-              || detailEl.previousElementSibling !== stepsContainer) {
-            stepsContainer.insertAdjacentElement('afterend', detailEl);
-          }
-        }
-      }
-
       function applyStep(stepKey) {
         const data = ROADMAP_DATA[stepKey];
         if (!data) return;
-        /* 좌측 탭 활성화 */
+        /* 데스크톱 좌측 탭 활성화 */
         steps.forEach(s => s.classList.toggle('is-active', s.dataset.step === stepKey));
         /* 진행 바 — 단계 N / 5 * 100% */
         progress.style.width = (parseInt(stepKey, 10) * 20) + '%';
-        /* 우측 패널 */
+        /* 데스크톱 우측 detail 패널 */
         labelEl.textContent = data.label;
         titleEl.textContent = data.title;
         contentEl.textContent = data.content;
@@ -3885,8 +3906,6 @@
           examplesWrap.hidden = true;
           examplesEl.innerHTML = '';
         }
-        /* 모바일 아코디언: detail 위치 재배치 */
-        placeDetailForViewport(stepKey);
       }
 
       steps.forEach(step => {
@@ -3894,15 +3913,84 @@
       });
       applyStep('1');
 
-      /* 뷰포트 변경(회전/리사이즈) 시 현재 active step 기준으로 detail 위치 재계산 */
-      let rmResizeTimer;
-      window.addEventListener('resize', () => {
-        clearTimeout(rmResizeTimer);
-        rmResizeTimer = setTimeout(() => {
-          const active = document.querySelector('.rm-step.is-active');
-          if (active) placeDetailForViewport(active.dataset.step);
-        }, 150);
-      });
+      /* ── 모바일: detail-head 자체가 아코디언 트리거인 5개 카드 동적 생성 ───
+         CSS에서 데스크톱은 .rm-mobile-list { display: none } 으로 숨김.
+         모바일에선 .rm-tabs(원본 5버튼 + detail) 영역이 display:none 처리됨. */
+      const rmBody = document.querySelector('.rm-body');
+      if (rmBody) {
+        const mobileList = document.createElement('div');
+        mobileList.className = 'rm-mobile-list';
+
+        Object.keys(ROADMAP_DATA).forEach((stepKey) => {
+          const data = ROADMAP_DATA[stepKey];
+          const item = document.createElement('div');
+          item.className = 'rm-mobile-item';
+          item.dataset.step = stepKey;
+          const examplesHTML = data.examples ? `
+            <div class="rm-detail-row">
+              <p class="rm-detail-row-label">예시</p>
+              <div class="rm-examples">
+                ${data.examples.map(ex => `
+                  <div class="rm-example">
+                    <p class="rm-example-role">${escapeHtml(ex.role)}</p>
+                    <p class="rm-example-items">${ex.items.map(escapeHtml).join(' · ')}</p>
+                  </div>
+                `).join('')}
+              </div>
+            </div>` : '';
+          item.innerHTML = `
+            <button class="rm-mobile-head" type="button" aria-expanded="false">
+              <span class="rm-detail-label">${escapeHtml(data.label)}</span>
+              <span class="rm-detail-title">${escapeHtml(data.title)}</span>
+            </button>
+            <div class="rm-mobile-body">
+              <div class="rm-mobile-body-inner">
+                <div class="rm-detail-row">
+                  <p class="rm-detail-row-label">내용</p>
+                  <p class="rm-detail-row-content">${escapeHtml(data.content)}</p>
+                </div>
+                <div class="rm-detail-row">
+                  <p class="rm-detail-row-label">산출물</p>
+                  <ul class="rm-detail-row-list">
+                    ${data.outputs.map(o => `<li>${escapeHtml(o)}</li>`).join('')}
+                  </ul>
+                </div>
+                ${examplesHTML}
+              </div>
+            </div>
+          `;
+          mobileList.appendChild(item);
+        });
+
+        rmBody.appendChild(mobileList);
+
+        /* 토글: 닫혀있으면 펼침(+다른 항목 닫기), 열려있으면 닫음 */
+        mobileList.querySelectorAll('.rm-mobile-item').forEach((item) => {
+          const head = item.querySelector('.rm-mobile-head');
+          head.addEventListener('click', () => {
+            const willOpen = !item.classList.contains('is-open');
+            mobileList.querySelectorAll('.rm-mobile-item').forEach((it) => {
+              it.classList.remove('is-open');
+              it.querySelector('.rm-mobile-head').setAttribute('aria-expanded', 'false');
+            });
+            if (willOpen) {
+              item.classList.add('is-open');
+              head.setAttribute('aria-expanded', 'true');
+              /* 진행 바도 해당 단계로 업데이트 */
+              progress.style.width = (parseInt(item.dataset.step, 10) * 20) + '%';
+            } else {
+              /* 모두 닫혔을 때 진행 바는 그대로 유지 (마지막 열린 단계 표시) */
+            }
+          });
+        });
+
+        /* 기본: 1단계 열림 */
+        const first = mobileList.querySelector('.rm-mobile-item');
+        if (first) {
+          first.classList.add('is-open');
+          first.querySelector('.rm-mobile-head').setAttribute('aria-expanded', 'true');
+        }
+      }
     })();
 
     /* 섹션 7 (강사·멘토) — 캐러셀 → 그리드 레이아웃 변경 (Figma 13230:3605)
