@@ -2606,24 +2606,64 @@
       .signal-partner--molab  { width: 74.725px;  height: 24px;   }
       .signal-partner--kcci   { width: 105.338px; height: 19.2px; }
       .signal-partner--wanted { width: 77px;      height: 22.2px; }
-      /* 섹션 04 Solution 모바일 — Figma 13230:3514 (다크 + 체크리스트) */
+      /* ──────────────────────────────────────────────────────────
+         Figma 13294:3499 모바일 섹션 4 (solution)
+         · Section: padding 70 20, gap 35
+         · Header(intro): gap 15, items-center
+         · Body: 16px Regular, text-center
+         · List: width 335 고정, gap 16
+         · Item: padding 20 16, radius 18, text 18 Medium
+         ────────────────────────────────────────────────────────── */
       .ax-section.solution {
         background: #14191e;
-        padding: 80px 20px;
-        gap: 40px;
+        padding: 70px 20px;
+        gap: 35px;
       }
-      .solution-intro { gap: 12px; align-items: center; text-align: center; }
-      .solution-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
-      .solution-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
-      .solution-body { font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: -0.01em; color: #ccc; text-align: center; }
+      .solution-intro {
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+      }
+      .solution-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
+      .solution-title {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
+        color: #fff;
+      }
+      .solution-body {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+        text-align: center;
+      }
       .solution-body br { display: none; }
-      .solution-list { width: 100%; gap: 10px; }
+      .solution-list {
+        width: 335px;
+        max-width: 100%;
+        gap: 16px;
+      }
       .solution-item {
-        padding: 16px 20px;
-        border-radius: 14px;
+        padding: 20px 16px;
+        border-radius: 18px;
         gap: 12px;
       }
-      .solution-item-text { font-size: 16px; font-weight: 500; }
+      .solution-item-text {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.18px;
+      }
       .solution-item-check { width: 28px; height: 28px; }
       /* 섹션 05 Outcome 모바일 — Figma 13230:3529 (다크 + 4박스 세로 스택) */
       .ax-section.outcome {
