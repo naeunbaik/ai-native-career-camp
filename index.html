@@ -107,6 +107,9 @@
       background-size: 240px 240px;
       opacity: 0.4;
       mix-blend-mode: overlay;
+      /* 하단 30%를 부드럽게 페이드아웃 — 노이즈 hard cutoff 가 만들던 가로 경계선 제거 */
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
+              mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 100%);
     }
 
     /* iframe 임베드 시(wanted 등) — 부모 chrome 고려해 인트로 높이 고정 */
@@ -236,7 +239,7 @@
       background: linear-gradient(
         to bottom,
         rgba(20, 25, 30, 0) 0px,
-        #14191e 300px
+        #14191e 480px                          /* 300 → 480 : 인트로 → 섹션2 페이드 길이 확장 */
       );
       color: #fff;
       padding: 160px var(--section-px) 0;       /* 다음 섹션과 사이 = 160 (다음 섹션의 top 160만) */
@@ -2474,7 +2477,7 @@
         background: linear-gradient(
           to bottom,
           rgba(20, 25, 30, 0) 0px,
-          #14191e 200px
+          #14191e 360px                        /* 200 → 360 : 모바일 페이드 영역 확장 */
         );
       }
       .problem-grid { gap: 35px; align-items: center; }
