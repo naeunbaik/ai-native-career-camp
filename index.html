@@ -2592,21 +2592,22 @@
         margin: 0;
       }
       .tools-grid {
-        /* Grid 가 viewport 전체(0~viewport)로 확장 + 좌우 padding 20px:
-           - scroll=0: 첫 카드 viewport_x=20 (좌측 20px 여백)
-           - mid scroll: padding 이 화면 밖으로 → 카드가 viewport 끝까지
-           - scroll=max: 마지막 카드 viewport_x=viewport-20 (우측 20px 여백) */
+        /* Grid 가 viewport 전체로 확장 + 양쪽 endpoint 20px 여백
+           - padding 0 20px: 좌우 inset
+           - scroll-padding 20px: scroll-snap 이 padding 위치 존중 */
         display: flex;
         flex-direction: row;
         gap: 10px;
         width: calc(100% + 40px);
         max-width: none;
         margin: 0 -20px;
-        padding: 0 20px;              /* 좌우 양쪽 20px */
+        padding: 0 20px;
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
+        scroll-padding-left: 20px;
+        scroll-padding-right: 20px;
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
@@ -2757,8 +2758,7 @@
       .benefits-head { gap: 12px; align-items: center; text-align: center; width: 100%; }
       .benefits-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; color: #89c8ea; }
       .benefits-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
-      /* 카드들 가로 스크롤 캐러셀 — tools 와 동일 패턴
-         scroll=0/max 시 양쪽 20px 여백, 슬라이드 중에는 여백 없음 */
+      /* 카드들 가로 스크롤 캐러셀 — tools 와 동일 패턴 */
       .benefits-grid {
         display: flex;
         flex-direction: row;
@@ -2766,11 +2766,13 @@
         width: calc(100% + 40px);
         max-width: none;
         margin: 0 -20px;
-        padding: 10px 20px;            /* 상하 10, 좌우 20 (scroll endpoint 여백) */
+        padding: 10px 20px;            /* 상하 10, 좌우 20 */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
+        scroll-padding-left: 20px;
+        scroll-padding-right: 20px;
       }
       .benefits-grid::-webkit-scrollbar { display: none; }
       .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
