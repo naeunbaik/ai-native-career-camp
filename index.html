@@ -25,10 +25,10 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%;
-      background: #fff;
+      background: #14191e;        /* 다크 베이스 — 섹션별 bg 가 위에 깔림. 흰색이면 모바일 외곽/스크롤 끝에서 보임 */
       overflow-x: hidden;
       font-family: 'Wanted Sans Variable', 'Wanted Sans', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
-      color: #000;
+      color: #fff;
       font-feature-settings: 'ss10' 1;
       word-break: keep-all;       /* 한국어 어절 단위 줄바꿈 */
       overflow-wrap: break-word;  /* 너무 긴 단어는 강제 줄바꿈 */
@@ -2938,20 +2938,60 @@
         letter-spacing: -0.14px;
       }
 
-      /* 섹션 11 Apply 모바일 — 카드 세로 스택 */
-      .ax-section.apply { background: #14191e; padding: 80px 20px; gap: 30px; align-items: stretch; }
-      .apply-title { font-size: 28px; line-height: 1.4; }
-      .apply-grid { flex-direction: column; gap: 12px; width: 100%; }
-      .apply-card { padding: 24px 20px; gap: 30px; border-radius: 18px; }
-      .apply-block { gap: 16px; }
-      .apply-block-title { font-size: 20px; }
-      .apply-block-lead { font-size: 14px; }
-      .apply-criteria li { font-size: 14px; }
-      .apply-info-row { font-size: 14px; }
-      .apply-info-row dt { width: 44px; }
-      .apply-step { font-size: 14px; gap: 12px; }
-      .apply-step-no { width: 56px; }
-      .apply-step-content { gap: 6px; }
+      /* 섹션 11 Apply 모바일 — Figma 13296:4621 */
+      .ax-section.apply {
+        background: #14191e;
+        padding: 70px 20px;            /* was 80·20 */
+        gap: 35px;                     /* was 30 */
+        align-items: stretch;
+      }
+      .apply-title {
+        font-size: 28px;
+        font-weight: 500;              /* Medium */
+        line-height: 1.5;              /* was 1.4 */
+        letter-spacing: -0.42px;
+        text-align: center;
+      }
+      .apply-grid { flex-direction: column; gap: 10px; width: 100%; }
+      .apply-card {
+        padding: 32px 28px;            /* was 24·20 */
+        gap: 35px;                     /* was 30 — block ↔ block (Card 1) */
+        border-radius: 24px;           /* was 18 */
+      }
+      /* Figma: 참가자격 block gap 15 / 교육안내·지원절차 block gap 20 */
+      .apply-block { gap: 20px; }
+      .apply-card:first-of-type .apply-block:first-of-type { gap: 15px; }
+      .apply-block-title {
+        font-size: 18px;               /* was 20 → Figma P_Headline2/SB 18 */
+        letter-spacing: -0.18px;
+      }
+      .apply-block-lead {
+        font-size: 14px;
+        letter-spacing: -0.14px;
+      }
+      .apply-criteria { gap: 4px; }    /* was 10 (desktop) → Figma 4 */
+      .apply-criteria li {
+        font-size: 14px;
+        letter-spacing: -0.14px;
+      }
+      .apply-info { gap: 10px; }
+      .apply-info-row {
+        flex-direction: column;        /* was row → Figma 세로 스택 */
+        gap: 4px;
+        font-size: 14px;
+        letter-spacing: -0.14px;
+      }
+      .apply-info-row dt { width: 50px; }
+      .apply-info-row dd { width: 100%; }
+      .apply-steps { gap: 20px; }
+      .apply-step {
+        flex-direction: column;        /* was row → Figma 세로 스택 */
+        gap: 4px;
+        font-size: 14px;
+        letter-spacing: -0.14px;
+      }
+      .apply-step-no { width: 50px; }
+      .apply-step-content { gap: 10px; width: 100%; }
       /* 섹션 08 Reference 모바일 — Figma 13077:16371 (캐러셀 디자인) */
       .ax-section.reference {
         padding: 80px 20px 40px;       /* prev tools 다름=160, next benefits 같음=40 */
