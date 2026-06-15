@@ -2562,36 +2562,55 @@
       .detail-row .detail-label + p { font-size: 15px; }
       .detail-row ul { padding-left: 22px; margin-left: 0; }
       /* 섹션 09 Tools 모바일 — Figma 13230:3664 (다크 + 캐러셀 가로 스크롤) */
+      /* Figma 13288:37754 — 모바일 주요 사용 툴 */
       .ax-section.tools {
         background: #14191e;
-        padding: 80px 20px;
-        gap: 30px;
+        padding: 70px 20px;          /* Figma py-[70px] px-[20px] */
+        gap: 15px;                    /* Figma 타이틀 ↔ 카드 row */
         align-items: stretch;
       }
-      .tools-title { font-size: 22px; font-weight: 500; color: #fff; }
+      .tools-title {
+        font-size: 20px;              /* Figma P_Headline1/SB 20px */
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: -0.2px;
+        color: #fff;
+        text-align: center;
+        width: 100%;
+      }
       .tools-grid {
         width: calc(100% + 40px);
         margin: 0 -20px;
-        padding: 0 20px;              /* 좌우 동일 inset → 카드 양옆에 같은 여백 */
-        gap: 12px;
+        padding: 0 20px;              /* 좌우 동일 inset */
+        gap: 10px;                    /* Figma 카드 간격 10px */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
         scroll-snap-type: x mandatory;
-        scroll-padding-left: 20px;    /* 스냅 위치 좌측 inset 고려 */
+        scroll-padding-left: 20px;
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        /* 뷰포트 폭에 맞춤: 좌 20 + 카드 + 우 8 peek = 100vw */
-        flex: 0 0 calc(100vw - 60px);
-        width: calc(100vw - 60px);
-        padding: 24px 20px;
+        flex: 0 0 300px;              /* Figma w-[300px] 고정 */
+        width: 300px;
+        padding: 32px 28px;           /* Figma py-[32px] px-[28px] */
         border-radius: 18px;
-        gap: 30px;
+        gap: 16px;                    /* Figma 로고 ↔ tool-body */
         scroll-snap-align: start;
       }
-      .tool-name { font-size: 20px; }
-      .tool-desc { font-size: 14px; }
+      .tool-body { gap: 5px; }        /* Figma title ↔ desc 5px */
+      .tool-name {
+        font-size: 18px;              /* Figma P_Headline2/B 18px Bold */
+        font-weight: 700;
+        line-height: 1.5;
+        letter-spacing: -0.18px;
+      }
+      .tool-desc {
+        font-size: 16px;              /* Figma Body3/R 16px */
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+      }
 
       /* 섹션 10 Why 모바일 — 카드 세로 스택 */
       .ax-section.why { background: #14191e; padding: 80px 20px; gap: 40px; align-items: stretch; }
