@@ -1410,6 +1410,8 @@
       width: 1060px;                /* Figma w-[1060px] */
       max-width: 100%;
     }
+    /* 데스크탑: 페이저 숨김 (모바일 캐러셀 전용) */
+    .benefits-pager { display: none; }
     .benefits-row {
       display: flex;
       gap: 16px;
@@ -3077,6 +3079,27 @@
         letter-spacing: -0.15px;
         color: #ececec;            /* Figma gy-02 (was #ccc gy-03) */
       }
+      /* 캐러셀 하단 페이저 (Figma 13296:56600 — 110×10) */
+      .benefits-pager {
+        display: flex;
+        gap: 18px;                  /* 8 + 18×4 ≈ 112 (Figma 110에 근사) */
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+      .benefits-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        transition: background-color 0.3s ease;
+      }
+      .benefits-dot.is-active {
+        background: #89c8ea;        /* Figma 액티브 도트 컬러 */
+      }
       /* 모바일: 헤더 / step 리스트 세로 stack, step row 내부도 세로 stack */
       /* 섹션 10 Schedule 모바일 — Figma 13067:3495 */
       .ax-section.schedule { padding: 20px 20px 40px; }   /* schedule 위 섹션과의 gap 40 (price bottom 20 + schedule top 20), 아래 동일 bg = 40 */
@@ -3741,6 +3764,14 @@
         </article>
       </div>
     </div>
+
+    <div class="benefits-pager" role="tablist" aria-label="수강생 혜택 카드 선택">
+      <button class="benefits-dot is-active" type="button" data-index="0" aria-label="1번째 카드"></button>
+      <button class="benefits-dot" type="button" data-index="1" aria-label="2번째 카드"></button>
+      <button class="benefits-dot" type="button" data-index="2" aria-label="3번째 카드"></button>
+      <button class="benefits-dot" type="button" data-index="3" aria-label="4번째 카드"></button>
+      <button class="benefits-dot" type="button" data-index="4" aria-label="5번째 카드"></button>
+    </div>
   </section>
 
   <section class="ax-section instructors">
@@ -4403,6 +4434,39 @@
 
     /* 섹션 7 (강사·멘토) — 캐러셀 → 그리드 레이아웃 변경 (Figma 13230:3605)
        기존 setupInstructorsCarousel 제거. 더 이상 자동재생/드래그/도트 필요 없음. */
+
+    /* ── 섹션 6 수강생 혜택 — 모바일 캐러셀 페이저 동기화 ────────────
+       Figma 13294:3760 — 5개 카드 가로 스크롤 + 하단 도트 nav */
+    (function setupBenefitsPager() {
+      const grid = document.querySelector('.benefits-grid');
+      const dots = document.querySelectorAll('.benefits-dot');
+      const cards = document.querySelectorAll('.benefit-card');
+      if (!grid || !dots.length || !cards.length) return;
+
+      /* 도트 클릭 → 해당 카드로 스크롤 */
+      dots.forEach((dot, idx) => {
+        dot.addEventListener('click', () => {
+          const card = cards[idx];
+          if (!card) return;
+          grid.scrollTo({ left: card.offsetLeft - grid.offsetLeft, behavior: 'smooth' });
+        });
+      });
+
+      /* 스크롤 위치 → 가장 가까운 카드 인덱스 → 활성 도트 동기화 */
+      let scrollTick;
+      grid.addEventListener('scroll', () => {
+        cancelAnimationFrame(scrollTick);
+        scrollTick = requestAnimationFrame(() => {
+          const gridLeft = grid.offsetLeft;
+          let best = 0, min = Infinity;
+          cards.forEach((c, i) => {
+            const dist = Math.abs(grid.scrollLeft - (c.offsetLeft - gridLeft));
+            if (dist < min) { min = dist; best = i; }
+          });
+          dots.forEach((d, i) => d.classList.toggle('is-active', i === best));
+        });
+      }, { passive: true });
+    })();
 
     /* ── 모바일: 글래스 프로스트 카드 스크롤 자동 focus ─────────
        카드가 뷰포트 중앙 영역(상하 40% 잘라낸 중간 20% strip)에
