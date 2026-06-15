@@ -2592,17 +2592,17 @@
         margin: 0;
       }
       .tools-grid {
-        /* 좌측 padding 0 → 첫 카드 viewport_x=0 flush, 슬라이드 시 좌측 여백
-           안 잡힘. 우측 padding 20 → 끝까지 슬라이드 했을 때 카드 3 우측에
-           20px 여백 노출. margin -20px 양쪽 으로 section padding(20)을
-           상쇄해 grid 가 viewport 전체(0 ~ viewport)로 확장. */
+        /* Grid 가 viewport 전체(0~viewport)로 확장 + 좌우 padding 20px:
+           - scroll=0: 첫 카드 viewport_x=20 (좌측 20px 여백)
+           - mid scroll: padding 이 화면 밖으로 → 카드가 viewport 끝까지
+           - scroll=max: 마지막 카드 viewport_x=viewport-20 (우측 20px 여백) */
         display: flex;
         flex-direction: row;
         gap: 10px;
         width: calc(100% + 40px);
         max-width: none;
         margin: 0 -20px;
-        padding: 0 20px 0 0;          /* 우측만 20px, 좌측 0 */
+        padding: 0 20px;              /* 좌우 양쪽 20px */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
@@ -2757,15 +2757,16 @@
       .benefits-head { gap: 12px; align-items: center; text-align: center; width: 100%; }
       .benefits-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; color: #89c8ea; }
       .benefits-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
-      /* 카드들 가로 스크롤 캐러셀 (멘토 카드 패턴 참고) — 행 평탄화 */
+      /* 카드들 가로 스크롤 캐러셀 — tools 와 동일 패턴
+         scroll=0/max 시 양쪽 20px 여백, 슬라이드 중에는 여백 없음 */
       .benefits-grid {
         display: flex;
         flex-direction: row;
         gap: 10px;
-        width: 100vw;                  /* 데스크톱 max-width 100% 캡 무시 */
+        width: calc(100% + 40px);
         max-width: none;
-        margin: 0 -20px;               /* section padding 양쪽 상쇄 */
-        padding: 10px 0;               /* 좌우 여백 0 */
+        margin: 0 -20px;
+        padding: 10px 20px;            /* 상하 10, 좌우 20 (scroll endpoint 여백) */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
