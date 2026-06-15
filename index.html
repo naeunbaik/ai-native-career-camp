@@ -70,8 +70,8 @@
       position: relative;
       width: 100%;
     }
-    /* 인트로 헤더/풋터는 캔버스 위에 */
-    .ax-header, .ax-footer {
+    /* 인트로 헤더/풋터/서브타이틀은 캔버스 위에 */
+    .ax-header, .ax-footer, .ax-subtitle {
       z-index: 2;
     }
     /* 다크 섹션의 카드 + 헤드라인 텍스트 모두 캔버스 위에 */
@@ -161,7 +161,25 @@
     /* 데스크탑 전용 줄바꿈 — 모바일에선 숨김 */
     .desktop-br { display: inline; }
 
-    /* ── 하단 정보 영역 (좌: subtitle / 우: 부가 텍스트, 하단 정렬) ─── */
+    /* ── 하단 영역 ─────────────────────────────────────────────
+       subtitle: 좌측 정렬 (header 와 별도 absolute 위치)
+       footer: 우측 정렬, footer-info 만 포함 */
+    .ax-subtitle {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - (var(--section-px) * 2));
+      max-width: 1100px;
+      text-align: left;
+      pointer-events: none;
+      margin: 0;
+      font-size: 17px;             /* Figma Body2/R */
+      font-weight: 400;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      color: #ccc;
+    }
     .ax-footer {
       position: absolute;
       left: 50%;
@@ -170,24 +188,16 @@
       max-width: 1100px;
       bottom: 60px;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;       /* 두 텍스트 하단 정렬 */
-      gap: 40px;
+      justify-content: flex-end;   /* footer-info 만 우측 정렬 */
+      align-items: flex-end;
       pointer-events: none;
-      font-size: 17px;             /* Figma Body2/R */
+      font-size: 17px;
       font-weight: 400;
       line-height: 1.7;
       letter-spacing: -0.01em;
-      color: #ccc;                 /* Figma gy-03 */
+      color: #ccc;
     }
     .ax-footer p { margin: 0; }
-    .ax-footer .ax-subtitle {
-      text-align: left;
-      font-size: 17px;             /* Figma Body2/R */
-      line-height: 1.7;
-      letter-spacing: -0.01em;
-      color: #ccc;                 /* Figma gy-03 */
-    }
     /* 우측 info 영역 — 라벨 / 값 컬럼 (Figma 13230:3474) */
     .ax-footer-info {
       display: flex;
@@ -2377,11 +2387,11 @@
       /* ──────────────────────────────────────────────────────────
          Figma 13293:6485 모바일 인트로
          · Header (top:50): eyebrow + title, gap 15
-         · Subtitle (header 영역 직하단, absolute): title 아래 15px gap
+         · Subtitle (header 직하단, absolute top:232): title 아래 15px gap
          · 키캡 + 뒤 텍스트: header ↔ footer 사이 (top:50, bottom:50 로 공간 확보)
-         · Footer-info (bottom:50): 대상 / 신청 기간
-         · .ax-footer 는 display:contents 로 평탄화 — 자식들이 intro 의 직접
-           자식처럼 absolute 위치 가능 (관련 ancestor: .ax-section.intro)
+         · Footer (bottom:50): 대상 / 신청 기간
+         · .ax-footer position:absolute 유지 → Three.js updateEmbedShift 가
+           footer.offsetTop 으로 키캡 중앙 정렬 정상 계산
          ────────────────────────────────────────────────────────── */
       .ax-section.intro,
       html.is-embedded .ax-section.intro { height: 625px; min-height: 625px; }
@@ -2407,39 +2417,36 @@
       .mobile-br { display: inline; }
       .desktop-br { display: none; }
 
-      /* .ax-footer 컨테이너 자체는 layout box 제거, 자식만 살아남음 →
-         자식의 position: absolute 가 .ax-section.intro 기준으로 동작 */
-      .ax-footer {
-        display: contents;
-      }
-      /* subtitle 을 header 영역 하단(타이틀 아래)에 절대 위치
-         top ≈ header top(50) + eyebrow(27) + gap(15) + title(125) + gap(15) = 232
-         z-index: 2 — display:contents 로 .ax-footer 의 z-index 가 사라지므로
-         자식에 직접 z-index 부여 (캔버스 z:1 위로 노출) */
-      .ax-footer .ax-subtitle {
-        position: absolute;
-        z-index: 2;
+      /* subtitle — header 직하단(title 아래) 절대 위치
+         top ≈ header top(50) + eyebrow(27) + gap(15) + title(125) + gap(15) = 232 */
+      .ax-subtitle {
         top: 232px;
+        bottom: auto;
         left: 20px;
         right: 20px;
         width: auto;
-        margin: 0;
+        max-width: none;
+        transform: none;
         font-size: 14px;
         font-weight: 500;            /* Figma SB(600) → Medium(500) 한 단계 낮춤 */
         line-height: 1.7;
         letter-spacing: -0.14px;
-        color: #ccc;
-        text-align: left;
       }
-      .ax-footer br.m-only { display: initial; }
-      /* Footer-info 도 절대 위치 — 섹션 하단, z-index: 2 */
-      .ax-footer-info {
-        position: absolute;
-        z-index: 2;
+      .ax-footer {
         bottom: 50px;
         left: 20px;
         right: 20px;
         width: auto;
+        max-width: none;
+        transform: none;
+        font-size: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 16px;
+      }
+      .ax-footer br.m-only { display: initial; }
+      .ax-footer-info {
         font-size: 14px;
         gap: 5px;
         letter-spacing: -0.14px;
@@ -3238,8 +3245,9 @@
       <h1 class="ax-title">AI Native<br>Career Camp</h1>
     </header>
 
+    <p class="ax-subtitle">부트캠프 수료 이후에도 취업하지 못한<br>청년을 위한 AI 네이티브 커리어 캠프</p>
+
     <footer class="ax-footer">
-      <p class="ax-subtitle">부트캠프 수료 이후에도 취업하지 못한<br>청년을 위한 AI 네이티브 커리어 캠프</p>
       <div class="ax-footer-info">
         <div class="ax-footer-info-labels">
           <p>대상</p>
