@@ -2892,15 +2892,51 @@
         margin: 0;
       }
 
-      /* 섹션 10 Why 모바일 — 카드 세로 스택 */
-      .ax-section.why { background: #14191e; padding: 80px 20px; gap: 40px; align-items: stretch; }
-      .why-head { gap: 10px; }
-      .why-title { font-size: 28px; line-height: 1.4; }
-      .why-body { font-size: 14px; }
-      .why-grid { flex-direction: column; gap: 12px; width: 100%; }
-      .why-card { height: auto; padding: 24px 20px; gap: 24px; border-radius: 18px; }
-      .why-card-title { font-size: 20px; }
-      .why-card-desc { font-size: 14px; }
+      /* 섹션 10 Why 모바일 — Figma 13296:4578 */
+      .ax-section.why {
+        background: #14191e;
+        padding: 70px 20px;            /* Figma 70·20 */
+        gap: 35px;                     /* Figma section gap */
+        align-items: stretch;
+      }
+      .why-head {
+        gap: 35px;                     /* Figma 섹션 레벨 gap = title ↔ body */
+        align-items: center;
+      }
+      .why-title {
+        font-size: 28px;
+        font-weight: 500;              /* Medium */
+        line-height: 1.5;              /* was 1.4 */
+        letter-spacing: -0.42px;
+        text-align: center;
+      }
+      .why-body {
+        font-size: 16px;               /* was 14 → Figma Body2/R 16 */
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+        text-align: center;
+      }
+      .why-grid { flex-direction: column; gap: 10px; width: 100%; }
+      .why-card {
+        height: auto;
+        padding: 32px 28px;            /* was 24·20 → Figma 32·28 */
+        gap: 20px;                     /* head ↔ desc */
+        border-radius: 24px;           /* was 18 → Figma 24 */
+      }
+      .why-card-head { gap: 4px; }     /* Figma 4 (label ↔ title) */
+      .why-card-label {
+        font-size: 14px;               /* Figma Label1/M 14 */
+        letter-spacing: -0.14px;
+      }
+      .why-card-title {
+        font-size: 24px;               /* was 20 → Figma H6_Title/SB 24 */
+        letter-spacing: -0.24px;
+      }
+      .why-card-desc {
+        font-size: 14px;               /* Figma Label1/R 14 */
+        letter-spacing: -0.14px;
+      }
 
       /* 섹션 11 Apply 모바일 — 카드 세로 스택 */
       .ax-section.apply { background: #14191e; padding: 80px 20px; gap: 30px; align-items: stretch; }
