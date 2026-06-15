@@ -2826,18 +2826,47 @@
       .ins-history-label { font-size: 14px; }
       .ins-history li { font-size: 14px; }
 
-      /* 섹션 08 Roadmap 모바일 — 좌측 탭이 가로 스택, 컴팩트 폰트 */
+      /* 섹션 08 Roadmap 모바일 — 단계별 아코디언 드롭다운 */
       .ax-section.roadmap { background: #14191e; padding: 80px 20px; gap: 30px; }
       .rm-head { gap: 12px; }
       .rm-eyebrow { font-size: 16px; }
       .rm-title { font-size: 28px; line-height: 1.4; }
       .rm-body { width: 100%; gap: 20px; }
-      .rm-tabs { flex-direction: column; gap: 12px; }
+      .rm-tabs { flex-direction: column; gap: 0; }
       .rm-steps { width: 100%; gap: 8px; }
-      .rm-step { padding: 16px 20px; border-radius: 8px; gap: 4px; }
-      .rm-step.is-active { border-radius: 10px; }
+      .rm-step {
+        padding: 16px 48px 16px 20px;   /* 우측 chevron 공간 확보 */
+        border-radius: 8px;
+        gap: 4px;
+        position: relative;
+      }
+      .rm-step.is-active { border-radius: 10px 10px 0 0; }   /* 펼친 상태: 하단 라운드 제거 */
       .rm-step-label { font-size: 13px; }
       .rm-step-title { font-size: 14px; }
+      /* Chevron 인디케이터 — 접힘 ▼ / 펼침 ▲ */
+      .rm-step::after {
+        content: '';
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        width: 14px;
+        height: 10px;
+        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23888' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+        transform: translateY(-50%);
+        transition: transform 0.25s ease, opacity 0.25s ease;
+        pointer-events: none;
+      }
+      .rm-step.is-active::after {
+        transform: translateY(-50%) rotate(180deg);
+        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2389c8ea' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+      }
+      /* Detail 패널이 .rm-steps 안으로 이동된 상태 (active step 바로 아래) */
+      .rm-steps > .rm-detail {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-top: -8px;             /* steps gap 8px 상쇄 → 시각적으로 step과 붙음 */
+        border-radius: 0 0 10px 10px; /* 상단 라운드 제거: active step과 연결된 느낌 */
+      }
       .rm-detail { padding: 24px 20px; gap: 16px; border-radius: 10px; }
       .rm-detail-head { gap: 6px; }
       .rm-detail-label { font-size: 14px; }
@@ -3809,6 +3838,29 @@
           '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[ch]));
       }
+      const detailEl = document.querySelector('.rm-detail');
+      const stepsContainer = document.querySelector('.rm-steps');
+      const tabsContainer = document.querySelector('.rm-tabs');
+      const mobileMQ = window.matchMedia('(max-width: 768px)');
+
+      /* 모바일: detail 패널을 active step 바로 다음으로 이동 (아코디언)
+         데스크톱: detail은 .rm-tabs 직속 .rm-steps 다음 위치로 복원 */
+      function placeDetailForViewport(stepKey) {
+        if (!detailEl || !stepsContainer || !tabsContainer) return;
+        if (mobileMQ.matches) {
+          const active = document.querySelector(`.rm-step[data-step="${stepKey}"]`);
+          if (active && active.nextElementSibling !== detailEl) {
+            active.insertAdjacentElement('afterend', detailEl);
+          }
+        } else {
+          /* 데스크톱 위치: .rm-tabs 의 .rm-steps 바로 뒤 */
+          if (detailEl.parentElement !== tabsContainer
+              || detailEl.previousElementSibling !== stepsContainer) {
+            stepsContainer.insertAdjacentElement('afterend', detailEl);
+          }
+        }
+      }
+
       function applyStep(stepKey) {
         const data = ROADMAP_DATA[stepKey];
         if (!data) return;
@@ -3833,12 +3885,24 @@
           examplesWrap.hidden = true;
           examplesEl.innerHTML = '';
         }
+        /* 모바일 아코디언: detail 위치 재배치 */
+        placeDetailForViewport(stepKey);
       }
 
       steps.forEach(step => {
         step.addEventListener('click', () => applyStep(step.dataset.step));
       });
       applyStep('1');
+
+      /* 뷰포트 변경(회전/리사이즈) 시 현재 active step 기준으로 detail 위치 재계산 */
+      let rmResizeTimer;
+      window.addEventListener('resize', () => {
+        clearTimeout(rmResizeTimer);
+        rmResizeTimer = setTimeout(() => {
+          const active = document.querySelector('.rm-step.is-active');
+          if (active) placeDetailForViewport(active.dataset.step);
+        }, 150);
+      });
     })();
 
     /* 섹션 7 (강사·멘토) — 캐러셀 → 그리드 레이아웃 변경 (Figma 13230:3605)
