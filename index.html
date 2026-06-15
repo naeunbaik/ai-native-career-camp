@@ -2375,17 +2375,18 @@
     /* 태블릿 브레이크포인트 제거 — 데스크탑에서 모바일(768px)로 직접 전환 */
     @media (max-width: 768px) {
       /* ──────────────────────────────────────────────────────────
-         Figma 13293:6485 모바일 인트로 — absolute positioning 유지
-         (3D 키캡 Three.js 씬과 layout 충돌 방지)
-         · Header 절대 위치 top: 70 (Figma padding-top 70)
-         · Subtitle 도 header 와 같이 절대 위치 — 타이틀 아래 자연스럽게
-         · Footer-info 절대 위치 bottom: 70
-         · Typography 는 Figma 사양 그대로 (16/48/14, weights, tracking)
+         Figma 13293:6485 모바일 인트로
+         · Header (top:50): eyebrow + title, gap 15
+         · Subtitle (header 영역 직하단, absolute): title 아래 15px gap
+         · 키캡 + 뒤 텍스트: header ↔ footer 사이 (top:50, bottom:50 로 공간 확보)
+         · Footer-info (bottom:50): 대상 / 신청 기간
+         · .ax-footer 는 display:contents 로 평탄화 — 자식들이 intro 의 직접
+           자식처럼 absolute 위치 가능 (관련 ancestor: .ax-section.intro)
          ────────────────────────────────────────────────────────── */
       .ax-section.intro,
       html.is-embedded .ax-section.intro { height: 625px; min-height: 625px; }
       .ax-header {
-        top: 70px;
+        top: 50px;
         width: calc(100% - 40px);
         gap: 15px;                   /* Figma eyebrow ↔ title 15px */
       }
@@ -2403,27 +2404,40 @@
         line-height: 1.3;
         letter-spacing: -0.72px;
       }
-      .ax-subtitle {
-        font-size: 14px;             /* Figma Label1/SB */
-        font-weight: 600;
+      .mobile-br { display: inline; }
+      .desktop-br { display: none; }
+
+      /* .ax-footer 컨테이너 자체는 layout box 제거, 자식만 살아남음 →
+         자식의 position: absolute 가 .ax-section.intro 기준으로 동작 */
+      .ax-footer {
+        display: contents;
+      }
+      /* subtitle 을 header 영역 하단(타이틀 아래)에 절대 위치
+         top ≈ header top(50) + eyebrow(27) + gap(15) + title(125) + gap(15) = 232 */
+      .ax-footer .ax-subtitle {
+        position: absolute;
+        top: 232px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;            /* Figma SB(600) → Medium(500) 한 단계 낮춤 */
         line-height: 1.7;
         letter-spacing: -0.14px;
         color: #ccc;
-      }
-      .mobile-br { display: inline; }
-      .desktop-br { display: none; }
-      .ax-footer {
-        bottom: 70px;                /* Figma padding-bottom 70 */
-        width: calc(100% - 40px);
-        font-size: 14px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        text-align: left;
       }
       .ax-footer br.m-only { display: initial; }
+      /* Footer-info 도 절대 위치 — 섹션 하단 */
       .ax-footer-info {
-        font-size: 14px;             /* Figma 14px */
-        gap: 5px;                     /* Figma label ↔ value 5px */
+        position: absolute;
+        bottom: 50px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        font-size: 14px;
+        gap: 5px;
         letter-spacing: -0.14px;
       }
       .ax-footer-info-labels {
