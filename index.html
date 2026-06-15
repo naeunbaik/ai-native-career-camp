@@ -3141,41 +3141,99 @@
       .price-tags { gap: 8px; }
       .price-tag { font-size: 13px; }
       .price-notes li { font-size: 13px; }
-      /* 섹션 07 Instructors 모바일 — Figma 13230:3605 (다크 + 그리드 레이아웃) */
+      /* ──────────────────────────────────────────────────────────
+         Figma 13294:3905 모바일 섹션 7 (instructors)
+         · Section: padding 70 20, gap 35, items-center
+         · Header: gap 15, items-center
+         · Body: 16 Regular text-center
+         · Group(강사/멘토): gap 15, group-title 20 SemiBold center
+         · Lecturer card: 335 폭, photo 100×100, padding 32 28, radius 18
+         · Mentor cards: 가로 캐러셀 (335 너비 안에서), 카드 300px, photo 80×80
+         ────────────────────────────────────────────────────────── */
       .ax-section.instructors {
         background: #14191e;
-        padding: 80px 20px;
-        gap: 40px;
+        padding: 70px 20px;
+        gap: 35px;
         align-items: center;
       }
-      .ins-head { width: 100%; gap: 12px; }
-      .ins-eyebrow { font-size: 16px; font-weight: 600; color: #89c8ea; }
-      .ins-title { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; }
-      .ins-headline-body { font-size: 14px; color: #ccc; }
-      .ins-group { width: 100%; gap: 20px; }
-      .ins-group-title { font-size: 22px; }
-      .ins-card {
-        flex-direction: column;
-        padding: 30px 24px;
-        gap: 24px;
-        border-radius: 18px;
+      .ins-head { width: 100%; gap: 15px; }
+      .ins-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
+      .ins-title {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
+        color: #fff;
+      }
+      .ins-headline-body {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+        text-align: center;
+      }
+      .ins-group { width: 100%; gap: 15px; }
+      .ins-group-title {
+        font-size: 20px;
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: -0.2px;
+        color: #fff;
+        text-align: center;
         width: 100%;
       }
-      .mentor-grid {
-        grid-template-columns: 1fr;       /* 모바일: 1 col 세로 스택 */
-        gap: 12px;
+      /* 강사 카드 (단일) */
+      .ins-card {
+        flex-direction: column;
+        padding: 32px 28px;
+        gap: 20px;
+        border-radius: 18px;
+        width: 335px;
+        max-width: 100%;
       }
-      .mentor-card { padding: 20px; gap: 16px; }
-      .ins-photo { width: 100px; height: 100px; border-radius: 10px; }
-      .ins-content { gap: 12px; width: 100%; }
-      .ins-name-row { flex-wrap: wrap; gap: 6px; }
-      .ins-name { font-size: 20px; }
-      .ins-role { font-size: 14px; }
-      .ins-bio { font-size: 14px; }
-      .ins-position { font-size: 14px; }
-      .ins-mentor-bio { font-size: 14px; }
+      .ins-card .ins-photo { width: 100px; height: 100px; border-radius: 8px; }
+      .ins-card .ins-name-row { gap: 5px; flex-wrap: wrap; }
+      /* 멘토 카드 — 가로 캐러셀 (3 cards, 각 300px) */
+      .mentor-grid {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;                /* 데스크탑 grid 해제 */
+        grid-template-columns: none;
+        gap: 10px;
+        width: 335px;
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+      }
+      .mentor-grid::-webkit-scrollbar { display: none; }
+      .mentor-card {
+        flex: 0 0 300px;
+        width: 300px;
+        padding: 32px 28px;
+        gap: 20px;
+        border-radius: 18px;
+        scroll-snap-align: start;
+      }
+      .mentor-card .ins-photo { width: 80px; height: 80px; border-radius: 8px; }
+      .mentor-card .ins-name-row { gap: 4px; }
+      /* 공통 typography (mobile) */
+      .ins-content { gap: 20px; width: 100%; }
+      .ins-name { font-size: 18px; font-weight: 700; letter-spacing: -0.18px; }
+      .ins-role { font-size: 14px; font-weight: 600; letter-spacing: -0.14px; }
+      .ins-bio { font-size: 13px; line-height: 1.7; letter-spacing: -0.13px; color: #ccc; }
+      .ins-position { font-size: 13px; line-height: 1.7; letter-spacing: -0.13px; color: #ccc; }
+      .ins-mentor-bio { font-size: 14px; line-height: 1.7; letter-spacing: -0.14px; color: #ccc; }
       .ins-history-label { font-size: 14px; }
-      .ins-history li { font-size: 14px; }
+      .ins-history li { font-size: 13px; }
 
       /* 섹션 08 Roadmap 모바일 — detail-head 자체가 아코디언 트리거 */
       .ax-section.roadmap { background: #14191e; padding: 80px 20px; gap: 30px; }
