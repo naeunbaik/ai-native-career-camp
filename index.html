@@ -308,14 +308,17 @@
       transition: opacity 0.65s ease-out,
                   transform 0.65s ease-out;
     }
-    /* 모든 버블 좌측 정렬 (Figma 13230:3484) — radius 18px, 좌하단 origin */
+    /* 채팅 버블 공통 — radius 18px (Figma 13230:3484) */
     .problem-chat-row .problem-card {
       border-radius: 18px;
       align-items: flex-start;
       text-align: left;
-      transform-origin: bottom left;     /* 좌하단에서 자라나는 느낌 */
     }
-    .problem-chat-row { justify-content: flex-start; }
+    /* 좌-우 교차 배열 (Figma): 1·3번째 LEFT, 2·4번째 RIGHT */
+    .problem-chat-row.left  { justify-content: flex-start; }
+    .problem-chat-row.right { justify-content: flex-end; }
+    .problem-chat-row.left  .problem-card { transform-origin: bottom left; }
+    .problem-chat-row.right .problem-card { transform-origin: bottom right; }
     /* 등장 완료 상태 — 정상 디자인 */
     .problem-chat-row.appeared .problem-card {
       opacity: 1;
@@ -3041,7 +3044,7 @@
             <p class="problem-card-author">디자인 직군 준비 중 · 27세</p>
           </article>
         </div>
-        <div class="problem-chat-row left">
+        <div class="problem-chat-row right">
           <article class="problem-card">
             <p class="problem-card-text">포트폴리오를 다시 만들어야 한다는 건 알겠는데<br>어디서부터 시작해야 할지도 모르겠고 혼자 하기엔 한계가 있어요.</p>
             <p class="problem-card-author">HR 직군 준비 중 · 29세</p>
@@ -3053,7 +3056,7 @@
             <p class="problem-card-author">마케팅 직군 준비 중 · 28세</p>
           </article>
         </div>
-        <div class="problem-chat-row left">
+        <div class="problem-chat-row right">
           <article class="problem-card">
             <p class="problem-card-text">이력서 100장 넘게 넣었는데 서류에서 계속 떨어져요. 뭘 더 해야 할지 모르겠어요.</p>
             <p class="problem-card-author">개발 직군 준비 중 · 26세</p>
