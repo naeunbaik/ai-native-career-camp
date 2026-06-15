@@ -3258,12 +3258,33 @@
       .ins-history-label { font-size: 14px; }
       .ins-history li { font-size: 13px; }
 
-      /* 섹션 08 Roadmap 모바일 — detail-head 자체가 아코디언 트리거 */
-      .ax-section.roadmap { background: #14191e; padding: 80px 20px; gap: 30px; }
-      .rm-head { gap: 12px; }
-      .rm-eyebrow { font-size: 16px; }
-      .rm-title { font-size: 28px; line-height: 1.4; }
-      .rm-body { width: 100%; gap: 20px; }
+      /* ──────────────────────────────────────────────────────────
+         Figma 13296:4178 모바일 섹션 8 (roadmap)
+         · Section: padding 70 20 0 (no bottom), gap 35, items-start
+         · Header: gap 15, items-center
+         · Body: width 100%, gap 10 (progress↔list 간격)
+         · 닫힘 카드: padding 32 28, radius 8, gap 8 (label+title)
+         · 열린 카드: padding 32 28, radius 12, gap 20 (title block + rows)
+         · Chevron 제거 (Figma 디자인 없음)
+         · Row 레이아웃: column flex (label 위 / content 아래)
+         ────────────────────────────────────────────────────────── */
+      .ax-section.roadmap { background: #14191e; padding: 70px 20px 0; gap: 35px; }
+      .rm-head { gap: 15px; }
+      .rm-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
+      .rm-title {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
+        color: #fff;
+      }
+      .rm-body { width: 100%; gap: 10px; }
       /* 데스크톱 .rm-tabs(좌측 5단계 버튼 + 우측 detail) 영역 전체 숨김 */
       .rm-tabs { display: none; }
 
@@ -3271,20 +3292,24 @@
       .rm-mobile-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;                      /* Figma 10 (was 8) */
         width: 100%;
       }
       .rm-mobile-item {
         background: #1e252c;
-        border-radius: 10px;
+        border-radius: 8px;             /* 닫힘: 8 */
         overflow: hidden;
+        transition: border-radius 0.3s ease;
+      }
+      .rm-mobile-item.is-open {
+        border-radius: 12px;            /* 열림: 12 */
       }
       .rm-mobile-head {
         width: 100%;
-        padding: 20px 48px 20px 20px;   /* 우측 chevron 공간 */
+        padding: 32px 28px;             /* Figma py-32 px-28 */
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;                       /* Figma 닫힘 gap 8 */
         align-items: flex-start;
         background: transparent;
         border: none;
@@ -3294,38 +3319,27 @@
         position: relative;
         color: inherit;
       }
+      /* 열린 카드의 head 는 inner title block 처럼 gap 10 */
+      .rm-mobile-item.is-open .rm-mobile-head { gap: 10px; }
       .rm-mobile-head .rm-detail-label {
-        font-size: 13px;
+        font-size: 16px;                /* Figma Body1/SB - Regular */
         font-weight: 400;
         line-height: 1.7;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.16px;
         color: #89c8ea;
         margin: 0;
       }
       .rm-mobile-head .rm-detail-title {
-        font-size: 18px;
+        font-size: 24px;                /* Figma H6_Title/SB */
         font-weight: 600;
-        line-height: 1.4;
-        letter-spacing: -0.01em;
+        line-height: 1.5;
+        letter-spacing: -0.24px;
         color: #fff;
         margin: 0;
       }
-      /* Chevron — 닫힘 ▼ / 열림 ▲ */
-      .rm-mobile-head::after {
-        content: '';
-        position: absolute;
-        right: 18px;
-        top: 50%;
-        width: 14px;
-        height: 10px;
-        background: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2389c8ea' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
-        transform: translateY(-50%);
-        transition: transform 0.3s ease;
-        pointer-events: none;
-      }
-      .rm-mobile-item.is-open .rm-mobile-head::after {
-        transform: translateY(-50%) rotate(180deg);
-      }
+      /* Figma 에는 chevron 없음 — 숨김 */
+      .rm-mobile-head::after { display: none; }
+
       /* Body — max-height transition으로 부드러운 펼침/접힘 */
       .rm-mobile-body {
         max-height: 0;
@@ -3336,23 +3350,45 @@
         max-height: 1500px;
       }
       .rm-mobile-body-inner {
-        padding: 0 20px 24px;
+        padding: 0 28px 32px;           /* head padding 과 일치 */
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 20px;                      /* Figma row 간격 20 */
       }
-      .rm-detail { padding: 24px 20px; gap: 16px; border-radius: 10px; }
-      .rm-detail-head { gap: 6px; }
-      .rm-detail-label { font-size: 14px; }
-      .rm-detail-title { font-size: 22px; }
-      .rm-detail-row { font-size: 14px; gap: 8px; }
-      .rm-detail-row-label { width: 40px; font-size: 14px; }
-      .rm-detail-row-content { font-size: 14px; }
-      .rm-detail-row-list li { font-size: 14px; }
-      .rm-examples { gap: 6px; }
-      .rm-example { gap: 10px; flex-direction: column; }
-      .rm-example-role { width: auto; font-size: 13px; }
-      .rm-example-items { font-size: 13px; }
+      /* Row 레이아웃 — column flex (label 위, content 아래) */
+      .rm-detail-row {
+        flex-direction: column;
+        gap: 10px;
+        font-size: 16px;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+      }
+      .rm-detail-row-label {
+        width: auto;                    /* column 이므로 width 50px 불필요 */
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.16px;
+        color: #fff;
+      }
+      .rm-detail-row-content {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+      }
+      .rm-detail-row-list { padding-left: 24px; list-style: disc; }
+      .rm-detail-row-list li {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+      }
+      .rm-detail-row-list li::before { content: none; }   /* desktop의 "· " 점 제거 (list-style 사용) */
+      .rm-examples { gap: 10px; }
+      .rm-example { gap: 8px; flex-direction: column; }
+      .rm-example-role { width: auto; font-size: 14px; }
+      .rm-example-items { font-size: 14px; }
 
       /* 모바일: 헤드라인 본문 강제 줄바꿈 해제 — 자연스럽게 어절 단위 흐름 */
       .problem-headline-body br,
