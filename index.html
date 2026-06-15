@@ -2591,13 +2591,12 @@
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        /* 반응형 카드 width — Figma의 300px 고정값은 디자인 캔버스 기준이라
-           실제 모바일 뷰포트에선 viewport-40 으로 처리해 우측에 다음 카드
-           텍스트가 잘려 보이는 문제 해소 (peek ≈ 10px, 카드 padding 28px
-           보다 작아서 텍스트가 들어가지 않음 → 깔끔한 카드 엣지만 노출) */
+        /* viewport 폭에 비례 — 어떤 모바일 너비든 카드 1개가 viewport 거의
+           가득 채우고 우측엔 ~10px 카드 엣지만 노출 (peek 가 card padding
+           28px 보다 작아서 다음 카드 텍스트는 들어가지 않음). max-width 캡
+           제거 → 넓은 모바일에서도 카드가 viewport 끝까지 확장됨. */
         flex: 0 0 calc(100vw - 40px);
         width: calc(100vw - 40px);
-        max-width: 300px;             /* 큰 모바일/태블릿에선 Figma 사양 유지 */
         padding: 32px 28px;           /* Figma py-[32px] px-[28px] */
         border-radius: 18px;
         gap: 16px;                    /* Figma 로고 ↔ tool-body */
@@ -2745,10 +2744,10 @@
       .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
       .benefit-card {
         /* viewport - 40: 카드 padding(24px) 보다 작은 peek (~10px) 으로
-           다음 카드 텍스트 들어가지 않음 */
+           다음 카드 텍스트 들어가지 않음. max-width 캡 제거 → 어떤 모바일
+           너비든 viewport 끝까지 확장. */
         flex: 0 0 calc(100vw - 40px);
         width: calc(100vw - 40px);
-        max-width: 300px;
         height: auto;
         min-height: 180px;
         padding: 24px;
