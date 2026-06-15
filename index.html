@@ -2666,36 +2666,74 @@
       }
       .solution-item-check { width: 28px; height: 28px; }
       /* 섹션 05 Outcome 모바일 — Figma 13230:3529 (다크 + 4박스 세로 스택) */
+      /* ──────────────────────────────────────────────────────────
+         Figma 13294:3648 모바일 섹션 5 (outcome)
+         · Section: padding 70 20, gap 35, items-center
+         · Header: gap 15, items-center
+         · Body: 16px Regular text-center
+         · Boxes container: 335px, rounded 24, 세로 stack
+         · Each box: padding 32 28, gap 20, icon 60×60, title 24 SemiBold, desc 14 Regular
+         ────────────────────────────────────────────────────────── */
       .ax-section.outcome {
         background: #14191e;
-        padding: 80px 20px;
-        gap: 40px;
+        padding: 70px 20px;
+        gap: 35px;
+        align-items: center;
       }
-      .outcome-headline { gap: 12px; align-items: center; text-align: center; }
-      .outcome-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
+      .outcome-headline {
+        gap: 15px;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+      }
+      .outcome-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
       .outcome-headline h2 {
         font-size: 28px;
         font-weight: 500;
-        line-height: 1.4;
-        letter-spacing: -0.015em;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
         color: #fff;
         white-space: normal;
       }
-      .outcome-headline-body { font-size: 14px; font-weight: 400; line-height: 1.7; letter-spacing: -0.01em; color: #ccc; text-align: center; }
+      .outcome-headline-body {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+        text-align: center;
+      }
       /* 4박스: 세로 스택, 박스 간 1px 디바이더로 연속감 유지 */
       .outcome-boxes {
         flex-direction: column;
-        width: 100%;
-        border-radius: 18px;
+        width: 335px;
+        max-width: 100%;
+        border-radius: 24px;
       }
       .outcome-box {
-        padding: 24px 20px;
-        gap: 14px;
+        padding: 32px 28px;
+        gap: 20px;
       }
       .outcome-box + .outcome-box { border-top: 1px solid rgba(255, 255, 255, 0.08); }
-      .outcome-icon { width: 44px; height: 44px; }
-      .outcome-text h3 { font-size: 18px; }
-      .outcome-text p { font-size: 14px; }
+      .outcome-icon { width: 60px; height: 60px; }
+      .outcome-text h3 {
+        font-size: 24px;
+        font-weight: 600;
+        line-height: 1.5;
+        letter-spacing: -0.24px;
+      }
+      .outcome-text p {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.14px;
+      }
       /* 모바일 커리큘럼 — Figma 기준 아코디언 레이아웃 */
       .ax-section.curriculum { padding: 80px 20px 40px; gap: 30px; }   /* prev outcome 다름=160 (80+80), next tools 같음=40 */
       .curriculum-head { gap: 5px; }
