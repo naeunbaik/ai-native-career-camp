@@ -2604,6 +2604,9 @@
         color: #ccc;
       }
       .signal-card-body br { display: none; }
+      /* 4개 <p> 강제 줄바꿈 해제 — 한 문단처럼 어절 단위 자연 줄바꿈 */
+      .signal-card-body p { display: inline; }
+      .signal-card-body p + p::before { content: " "; }
       /* 파트너 로고 — Figma 원본 크기 (모바일은 더 작게) */
       .signal-partners { gap: 20px; }
       .signal-partner--molab  { width: 74.725px;  height: 24px;   }
@@ -3133,7 +3136,7 @@
       }
       .benefit-header {
         gap: 8px;                /* Figma label ↔ name 8px */
-        width: 180px;             /* Figma title group 180px 고정 */
+        width: 100%;              /* 180px 고정 해제 — 긴 타이틀(Claude VOD 무상 제공) 강제 줄바꿈 방지 */
       }
       .benefit-label {
         font-size: 15px;          /* Figma Label1/M */
