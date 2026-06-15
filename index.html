@@ -2457,36 +2457,80 @@
         font-weight: 600;             /* Figma Label1/SB */
       }
       .ax-footer-info-values { font-weight: 400; }   /* Figma Label1/R */
+      /* ──────────────────────────────────────────────────────────
+         Figma 13293:14148 모바일 섹션 2 (problem)
+         · Section: padding 70 20, gradient bg 유지
+         · grid gap 35, header gap 15 (Figma 정확 일치)
+         · Header: 가운데 정렬 (eyebrow 16 / title 28 / desc 16)
+         · Chat container: 335px 고정, padding 32 28, gap 15, radius 24
+         · Bubbles: padding 16 20, gap 6, radius 18, 모두 좌측 정렬
+         · Bubble text 16, author 13
+         ────────────────────────────────────────────────────────── */
       .ax-section.problem {
-        padding: 80px 20px;
+        padding: 70px 20px;
         background: linear-gradient(
           to bottom,
           rgba(20, 25, 30, 0) 0px,
           #14191e 200px
         );
       }
-      /* 모바일: 헤드라인 + 채팅 컨테이너 (Figma 디자인 채팅버블 유지) */
-      .problem-grid { gap: 40px; align-items: center; }
-      .problem-headline { gap: 12px; align-items: center; text-align: center; }
-      .problem-eyebrow { font-size: 16px; font-weight: 600; line-height: 1.5; letter-spacing: -0.01em; color: #89c8ea; }
-      .problem-headline h2 { font-size: 28px; font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; color: #fff; white-space: normal; }
-      .problem-headline-body { font-size: 14px; color: #ccc; text-align: center; }
-      /* 모바일 채팅 컨테이너 — 가로 100%, 패딩·간격 축소 */
+      .problem-grid { gap: 35px; align-items: center; }
+      .problem-headline { gap: 15px; align-items: center; text-align: center; }
+      .problem-eyebrow {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #89c8ea;
+      }
+      .problem-headline h2 {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.42px;
+        color: #fff;
+        white-space: normal;
+      }
+      .problem-headline-body {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+        color: #ccc;
+        text-align: center;
+      }
       .problem-chat {
-        width: 100%;
-        padding: 24px 20px;
-        gap: 12px;
-        border-radius: 18px;
+        width: 335px;
+        max-width: 100%;
+        padding: 32px 28px;
+        gap: 15px;
+        border-radius: 24px;
+      }
+      /* 모바일 — 모든 버블 좌측 정렬 (데스크탑 좌-우 교차 패턴 override) */
+      .problem-chat-row,
+      .problem-chat-row.right {
+        justify-content: flex-start;
       }
       .problem-chat .problem-card {
-        padding: 14px 18px;
-        gap: 4px;
-        max-width: 90%;
+        padding: 16px 20px;
+        gap: 6px;
+        width: 100%;
+        max-width: 100%;
       }
-      .problem-chat-row .problem-card { border-radius: 14px; }
-      .problem-card-text { font-size: 14px; font-weight: 400; line-height: 1.6; }
-      .problem-card-text br { display: none; }   /* 모바일: 강제 줄바꿈 해제 → 자연 흐름 */
-      .problem-card-author { font-size: 12px; }
+      .problem-chat-row .problem-card { border-radius: 18px; }
+      .problem-card-text {
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.16px;
+      }
+      .problem-card-text br { display: none; }   /* 자연 줄바꿈 */
+      .problem-card-author {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 1.7;
+        letter-spacing: -0.13px;
+      }
       /* 섹션 03 모바일 — 다크 + 2-컬럼 카드 세로 stack + 파트너 로고 */
       .ax-section.signal {
         background: #14191e;
