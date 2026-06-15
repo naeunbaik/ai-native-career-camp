@@ -2503,8 +2503,8 @@
         text-align: center;
       }
       .problem-chat {
-        width: 335px;
-        max-width: 100%;
+        width: 100%;                   /* 고정 335 제거 — 뷰포트 폭 따라 확장 */
+        max-width: 500px;              /* 너무 넓은 mobile/tablet에서만 캡 */
         padding: 32px 28px;
         gap: 15px;
         border-radius: 24px;
@@ -2571,8 +2571,8 @@
       }
       .signal-card {
         flex-direction: column;
-        width: 335px;
-        max-width: 100%;
+        width: 100%;                   /* 고정 335 제거 — 뷰포트 폭 따라 확장 */
+        max-width: 500px;
         height: auto;
         border-radius: 24px;
       }
@@ -2652,8 +2652,8 @@
       }
       .solution-body br { display: none; }
       .solution-list {
-        width: 335px;
-        max-width: 100%;
+        width: 100%;                   /* 고정 335 제거 — 뷰포트 폭 따라 확장 */
+        max-width: 500px;
         gap: 16px;
       }
       .solution-item {
@@ -2715,8 +2715,8 @@
       /* 4박스: 세로 스택, 박스 간 1px 디바이더로 연속감 유지 */
       .outcome-boxes {
         flex-direction: column;
-        width: 335px;
-        max-width: 100%;
+        width: 100%;                   /* 고정 335 제거 — 뷰포트 폭 따라 확장 */
+        max-width: 500px;
         border-radius: 24px;
       }
       .outcome-box {
@@ -3567,17 +3567,42 @@
         color: #767676;
         margin-top: -20px;                /* 섹션 gap 30 → 효과적 10px (carousel ↔ disclaimer) */
       }
-      /* 섹션 12 FAQ 모바일 — 라이트 + 아코디언 */
-      .ax-section.faq { background: #fff; padding: 80px 20px; gap: 24px; align-items: stretch; }
-      .faq-title { width: 100%; font-size: 22px; }
-      .faq-list { width: 100%; gap: 12px; }
-      .faq-item { padding: 24px 20px; border-radius: 18px; }
-      .faq-q { gap: 12px; }
-      .faq-q-text { font-size: 16px; line-height: 1.6; }
+      /* 섹션 12 FAQ 모바일 — Figma 13296:4699 */
+      .ax-section.faq {
+        background: #fff;
+        padding: 70px 20px;            /* was 80·20 */
+        gap: 15px;                     /* was 24 → Figma 15 */
+        align-items: stretch;
+      }
+      .faq-title {
+        width: 100%;
+        font-size: 20px;               /* was 22 → Figma P_Headline1/SB 20 */
+        font-weight: 600;              /* SemiBold */
+        line-height: 1.5;
+        letter-spacing: -0.2px;
+        text-align: center;
+      }
+      .faq-list { width: 100%; gap: 10px; }              /* was 12 */
+      .faq-item {
+        padding: 30px;                 /* was 24·20 → Figma 30 (4면 동일) */
+        border-radius: 24px;           /* was 18 → Figma 24 */
+      }
+      .faq-q { gap: 12px; align-items: flex-start; }
+      .faq-q-text {
+        font-size: 14px;               /* was 16 → Figma Label1/B 14 */
+        font-weight: 700;
+        line-height: 1.7;              /* was 1.6 */
+        letter-spacing: -0.14px;
+      }
       .faq-chevron { width: 24px; height: 24px; }
-      .faq-a { font-size: 14px; }
-      .faq-a li { font-size: 14px; }
-      .faq-item.is-open .faq-a { margin-top: 10px; }
+      .faq-a {
+        font-size: 14px;               /* Figma Label1/R 14 */
+        line-height: 1.7;
+        letter-spacing: -0.14px;
+        color: #939393;
+      }
+      .faq-a li { font-size: 14px; line-height: 1.7; }
+      .faq-item.is-open .faq-a { margin-top: 12px; }     /* Figma item gap 12 */
 
       /* 모바일: 모든 카드 radius 18px로 통일 */
       .problem-card,
