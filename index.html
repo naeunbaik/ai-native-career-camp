@@ -2592,17 +2592,17 @@
         margin: 0;
       }
       .tools-grid {
-        /* Right-bleed: 좌측은 section content 시작(viewport_x=20)에서
-           시작, 우측은 viewport 끝까지(그 너머로는 스크롤로 나옴).
-           width = viewport - 20 (좌측 padding 20px 만 남기고 우측 끝까지).
-           max-width: none 으로 데스크톱 max-width:100% 캡 우회. */
+        /* 좌측 padding 0 → 첫 카드 viewport_x=0 flush, 슬라이드 시 좌측 여백
+           안 잡힘. 우측 padding 20 → 끝까지 슬라이드 했을 때 카드 3 우측에
+           20px 여백 노출. margin -20px 양쪽 으로 section padding(20)을
+           상쇄해 grid 가 viewport 전체(0 ~ viewport)로 확장. */
         display: flex;
         flex-direction: row;
         gap: 10px;
-        width: calc(100vw - 20px);
+        width: calc(100% + 40px);
         max-width: none;
-        margin: 0;
-        padding: 0;
+        margin: 0 -20px;
+        padding: 0 20px 0 0;          /* 우측만 20px, 좌측 0 */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
