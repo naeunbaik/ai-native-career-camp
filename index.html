@@ -2572,19 +2572,23 @@
       .tools-grid {
         width: calc(100% + 40px);
         margin: 0 -20px;
-        padding: 0 0 0 20px;          /* 좌측만 inset, 우측은 뷰포트 끝까지 */
+        padding: 0 20px;              /* 좌우 동일 inset → 카드 양옆에 같은 여백 */
         gap: 12px;
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 20px;    /* 스냅 위치 좌측 inset 고려 */
       }
       .tools-grid::-webkit-scrollbar { display: none; }
       .tool-card {
-        flex: 0 0 280px;
-        width: 280px;
+        /* 뷰포트 폭에 맞춤: 좌 20 + 카드 + 우 8 peek = 100vw */
+        flex: 0 0 calc(100vw - 60px);
+        width: calc(100vw - 60px);
         padding: 24px 20px;
         border-radius: 18px;
         gap: 30px;
+        scroll-snap-align: start;
       }
       .tool-name { font-size: 20px; }
       .tool-desc { font-size: 14px; }
@@ -2706,16 +2710,19 @@
         gap: 10px;
         width: calc(100% + 40px);
         margin: 0 -20px;
-        padding: 10px 0 10px 20px;     /* 좌측만 inset, 우측은 뷰포트 끝까지 */
+        padding: 10px 20px;            /* 좌우 동일 inset */
         overflow-x: auto;
         scrollbar-width: none;
         -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 20px;
       }
       .benefits-grid::-webkit-scrollbar { display: none; }
       .benefits-row { display: contents; }   /* 두 row를 한 줄 가로 스크롤로 평탄화 */
       .benefit-card {
-        flex: 0 0 280px;
-        width: 280px;
+        /* 뷰포트 폭에 맞춤: 좌 20 + 카드 + 우 ~10 peek */
+        flex: 0 0 calc(100vw - 60px);
+        width: calc(100vw - 60px);
         height: auto;
         min-height: 180px;
         padding: 24px;
@@ -2723,6 +2730,7 @@
         gap: 24px;
         flex-direction: column;
         justify-content: space-between;
+        scroll-snap-align: start;
       }
       .benefit-header { gap: 6px; }
       .benefit-label { font-size: 13px; }
