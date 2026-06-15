@@ -2719,8 +2719,20 @@
       .outcome-box {
         padding: 32px 28px;
         gap: 20px;
+        position: relative;            /* pseudo-element 기준점 */
       }
-      .outcome-box + .outcome-box { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+      /* Figma 디바이더 길이 279px = 카드 너비(335) - 양쪽 padding(28*2)
+         박스 끝까지가 아닌 padding 안쪽까지만 노출 */
+      .outcome-box + .outcome-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 28px;
+        right: 28px;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
       .outcome-icon { width: 60px; height: 60px; }
       .outcome-text h3 {
         font-size: 24px;
