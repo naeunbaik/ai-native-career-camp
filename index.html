@@ -2413,9 +2413,12 @@
         display: contents;
       }
       /* subtitle 을 header 영역 하단(타이틀 아래)에 절대 위치
-         top ≈ header top(50) + eyebrow(27) + gap(15) + title(125) + gap(15) = 232 */
+         top ≈ header top(50) + eyebrow(27) + gap(15) + title(125) + gap(15) = 232
+         z-index: 2 — display:contents 로 .ax-footer 의 z-index 가 사라지므로
+         자식에 직접 z-index 부여 (캔버스 z:1 위로 노출) */
       .ax-footer .ax-subtitle {
         position: absolute;
+        z-index: 2;
         top: 232px;
         left: 20px;
         right: 20px;
@@ -2429,9 +2432,10 @@
         text-align: left;
       }
       .ax-footer br.m-only { display: initial; }
-      /* Footer-info 도 절대 위치 — 섹션 하단 */
+      /* Footer-info 도 절대 위치 — 섹션 하단, z-index: 2 */
       .ax-footer-info {
         position: absolute;
+        z-index: 2;
         bottom: 50px;
         left: 20px;
         right: 20px;
