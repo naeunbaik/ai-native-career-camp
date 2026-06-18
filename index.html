@@ -1247,8 +1247,9 @@
       border-radius: 12px;
       overflow: hidden;
       flex-shrink: 0;
-      /* Figma 13270:7236 — 강사·멘토 카드 공통 그라디언트 (PNG alpha 비치는 배경) */
-      background: linear-gradient(to bottom, #98e2ff, #c4e5f7);
+      /* Figma 13270:7236 — 정방형 컴포넌트 export 에 그라디언트가 이미 포함됨.
+         이미지 로딩 전 잠깐 보일 fallback 컬러만 유지 */
+      background: #c4e5f7;
     }
     .ins-photo img {
       width: 100%;
